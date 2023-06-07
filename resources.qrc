@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/res">
+        <file>media/add.png</file>
+        <file>media/back.png</file>
+        <file>media/forward.png</file>
+        <file>media/menu.png</file>
+        <file>media/reflash.png</file>
+        <file>html/homepage.html</file>
+        <file>media/background.jpg</file>
+        <file>media/cu_icon.ico</file>
+        <file>media/cu_icon.png</file>
+        <file>html/template_bookmarks.html</file>
+        <file>html/aboutpage.html</file>
+    </qresource>
+</RCC>

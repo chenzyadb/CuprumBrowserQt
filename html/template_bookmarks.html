@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8" />
+        <title>书签页</title>
+        <style>
+            body {
+                width: 100vw;
+                height: 100vh;
+                background-color: #F0F0F0;
+            }
+            .page-head {
+                position: absolute;
+                display: flex;
+                align-items: center;
+                width: 100vw;
+                height: 50px;
+                left: 0px;
+                top: 0px;
+                background-color: #3399FF;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                color: #FFFFFF;
+                font-family: 'Microsoft YaHei';
+                font-size: 20px;
+                font-weight: normal;
+            }
+            .bookmarks-container {
+                position: absolute;
+                top: 80px;
+                left: 0px;
+                width: 100vw;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+            }
+            .bookmark-item-container {
+                position:relative;
+                margin-top: 10px;
+                width: 80%;
+                height: 50px;
+                font-size: 16px;
+                background-color: #FFFFFF;
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            }
+            .bookmark-item-container:hover {
+                background-color: #F8F8F8;
+            }
+            .item-name {
+                position: absolute;
+                left: 20px;
+                right: 100px;
+                top: 0px;
+                bottom: 0px;
+                height: 30px;
+                display: inline-block;
+                vertical-align: middle;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .item-delete-button {
+                position: absolute;
+                right: 20px;
+                top: 10px;
+                display: inline-block;
+                vertical-align: middle;
+                width: 50px;
+                height: 30px;
+                border: none;
+                background-color: #FF0000;
+                border-radius: 5px;
+                color: #FFFFFF;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-head">
+            <p style="margin-left: 50px;">书签</p>
+        </div>
+        <div class="bookmarks-container">
+            {% BOOKMARKS_DATA %}
+        </div>
+    </body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <title>CuHomePage</title>
+        <meta charset="utf-8" />
+        <style>
+            body {
+                width: 100vw;
+                height: 100vh;
+                background-image: url("cu://image/background.jpg");
+                background-repeat: no-repeat;
+                background-position: center center;
+                background-size: cover;
+            }
+            .title {
+                position: absolute;
+                left: 50px;
+                top: 30px;
+                color: #FFFFFF;
+                font-family: 'Microsoft YaHei';
+                font-size: 20px;
+                font-weight: normal;
+            }
+            .searchbox-container {
+                position: absolute;
+                top: 200px;
+                width: 100%;
+                text-align: center;
+            }
+            #searchBox {
+                background-color: rgba(255, 255, 255, 0.5);
+                width: 500px;
+                height: 40px;
+                border: none;
+                border-radius: 20px;
+                padding-left: 20px;
+                padding-right: 20px;
+                color: #000000;
+                font-family: 'Microsoft YaHei';
+                font-size: 16px;
+                font-weight: normal;
+            }
+        </style>
+        <script>
+            document.onkeydown = function (event) {
+                if (event.keyCode == 13) {
+                    var keyword = document.getElementById('searchBox').value;
+                    window.location.href = 'https://www.bing.com/search?q=' + keyword;
+                }
+            };
+        </script>
+    </head>
+    <body>
+        <div class="title">
+            <img src="cu://image/cu_icon.png" style="width: 30px; height: 30px; display: inline-block; vertical-align: middle;"/>
+            <span style="margin-left: 10px; display: inline-block; vertical-align: middle;">CuprumBrowserQt</span>
+        </div>
+        <div class="searchbox-container">
+            <input type="text" id="searchBox" placeholder="搜索网页内容"/>
+        </div>
+    </body>
+</html>

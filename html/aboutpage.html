@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8" />
+        <title>关于</title>
+        <style>
+            body {
+                width: 100vw;
+                height: 100vh;
+                background-color: #F0F0F0;
+            }
+            .page-head {
+                position: absolute;
+                display: flex;
+                align-items: center;
+                width: 100vw;
+                height: 50px;
+                left: 0px;
+                top: 0px;
+                background-color: #3399FF;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+                color: #FFFFFF;
+                font-family: 'Microsoft YaHei';
+                font-size: 20px;
+                font-weight: normal;
+            }
+            .container {
+                position: absolute;
+                top: 80px;
+                left: 0px;
+                width: 100vw;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+                align-items: center;
+            }
+            .about-product {
+                position: relative;
+                width: 600px;
+                height: 300px;
+                padding: 0px;
+                background-color: #FFFFFF;
+                font-weight: normal;
+                border-radius: 10px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            }
+            .product-info {
+                margin-top: 20px;
+                margin-left: 20px;
+                padding: 0px;
+                color: #000000;
+                font-family: 'Microsoft YaHei';
+                font-size: 20px;
+            }
+            .product-introduce {
+                margin-top: 10px;
+                margin-left: 20px;
+                padding: 0px;
+                color: #000000;
+                font-family: 'Microsoft YaHei';
+                font-size: 14px;
+            }
+            .divider {
+                height: 2px;
+                width: 100%;
+                margin-top: 20px;
+                background-color: #E0E0E0;
+            }
+            .product-version {
+                margin-top: 20px;
+                margin-left: 20px;
+                padding: 0px;
+                color: #404040;
+                font-family: 'Microsoft YaHei';
+                font-size: 14px;
+            }
+            .citation-info {
+                margin-top: 10px;
+                margin-left: 20px;
+                color: #404040;
+                font-family: 'Microsoft YaHei';
+                font-size: 14px;
+            }
+            .copyright-info {
+                position: absolute;
+                bottom: 20px;
+                left: 20px;
+                color: #888888;
+                font-family: 'Microsoft YaHei';
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-head">
+            <p style="margin-left: 50px;">关于</p>
+        </div>
+        <div class="container">
+            <p style="width: 580px; color: #888888; font-size: 16px;">关于浏览器</p>
+            <div class="about-product">
+                <div class="product-info">
+                    <img src="cu://image/cu_icon.png" style="width: 30px; height: 30px; display: inline-block; vertical-align: middle;" />
+                    <span style="margin-left: 10px; display: inline-block; vertical-align: middle;">CuprumBrowserQt</span>
+                </div>
+                <div class="product-introduce">
+                    <span>一个追求速度, 安全, 简约的网页浏览器.</span>
+                </div>
+                <div class="divider"></div>
+                <div class="product-version">
+                    <span>版本号: V1.0.0 &nbsp; (64位) &nbsp;&nbsp; 内核版本: 102.0.5005.177</span>
+                </div>
+                <div class="citation-info">
+                    <span>CuprumBrowserQt 的诞生离不开 <a href="https://www.qt.io/">Qt</a> 和 <a href="https://chromium.org/">Chromium</a> 开源项目.</span>
+                </div>
+                <div class="copyright-info">
+                    <span>Copyright Chenzyadb 2023, All Rights Reserved.</span>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
