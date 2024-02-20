@@ -103,15 +103,12 @@ MainWindow::MainWindow(const QString &path) :
         browserProfile_->settings()->setAttribute(QWebEngineSettings::PlaybackRequiresUserGesture, false);
         browserProfile_->settings()->setAttribute(QWebEngineSettings::PdfViewerEnabled, true);
         browserProfile_->settings()->setAttribute(QWebEngineSettings::AutoLoadIconsForPage, true);
+        browserProfile_->settings()->setAttribute(QWebEngineSettings::NavigateOnDropEnabled, true);
         QString browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                                    "Chrome/" + QString(qWebEngineChromiumVersion()) + " Safari/537.36";
         browserProfile_->setHttpUserAgent(browserUserAgent);
-        browserProfile_->clearAllVisitedLinks();
-        browserProfile_->clearHttpCache();
-        browserProfile_->setCachePath(path_ + "\\browser_cache");
-        browserProfile_->setPersistentStoragePath(path_ + "\\browser_storage");
         browserProfile_->setPersistentCookiesPolicy(QWebEngineProfile::AllowPersistentCookies);
-        browserProfile_->setHttpCacheType(QWebEngineProfile::DiskHttpCache);
+        browserProfile_->setHttpCacheType(QWebEngineProfile::MemoryHttpCache);
         browserProfile_->installUrlSchemeHandler("cu", new CuSchemeHandler(path_));
         QObject::connect(browserProfile_, &QWebEngineProfile::downloadRequested, this, &MainWindow::Browser_onDownloadRequested);
     }
@@ -338,7 +335,8 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    QDir(path_ + "\\browser_cache").removeRecursively();
+    browserProfile_->clearAllVisitedLinks();
+    browserProfile_->clearHttpCache();
     logger_->Info("MainWindow closed.");
     event->accept();
     deleteLater();

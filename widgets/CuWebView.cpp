@@ -1,15 +1,13 @@
 #include "widgets/CuWebView.h"
 
 CuWebView::CuWebView(QWidget* parent, QWebEngineProfile* profile) :
-    QWebEngineView(parent),
+    QWebEngineView(profile, parent),
     parent_(parent),
     profile_(profile)
 {
-    QWebEnginePage* page = new QWebEnginePage(profile_, this);
-    connect(page, &QWebEnginePage::fullScreenRequested, this, [=](QWebEngineFullScreenRequest request){
+    connect(page(), &QWebEnginePage::fullScreenRequested, this, [=](QWebEngineFullScreenRequest request) {
         request.accept();
     });
-    setPage(page);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 

@@ -1,0 +1,5 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(520,5): warning MSB8004: Output 目录未以斜杠结尾。  此生成实例将添加斜杠，因为必须有这个斜杠才能正确计算 Output 目录。
+  Generate moc_predefs.h
+C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(247,5): warning MSB8064: 项“release\moc_predefs.h.cbt”的自定义生成成功，但指定的依赖项“c:\users\chenz\documents\qtprojects\cuprumbrowserqt\release\moc_predefs.h.cbt”不存在。这可能会导致增量生成无法正常工作。
+  MainWindow.cpp
+  CuprumBrowserQt.vcxproj -> C:\Users\chenz\Documents\QtProjects\CuprumBrowserQt_Build\CuprumBrowserQt.exe
