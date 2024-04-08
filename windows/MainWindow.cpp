@@ -165,7 +165,7 @@ MainWindow::MainWindow() :
         addButton_->setIcon(QIcon(":/res/media/add.png"));
         addButton_->setIconSize(QSize(20, 20));
         addButton_->setContentsMargins(0, 0, 0, 0);
-        addButton_->setToolTip("Browser menu.");
+        addButton_->setToolTip("Add Tab.");
         connect(addButton_, &QPushButton::clicked, this, [this]() {
             AddBrowserWindow_(new CuWebView(baseWidget_));
             LoadUrl_("cu://home/");
