@@ -2,7 +2,7 @@
 <html lang="zh-cn">
     <head>
         <meta charset="utf-8" />
-        <title>书签页</title>
+        <title>历史记录页</title>
         <style>
             body {
                 width: 100vw;
@@ -24,7 +24,7 @@
                 font-size: 20px;
                 font-weight: normal;
             }
-            .bookmarks-container {
+            .history-container {
                 position: absolute;
                 top: 80px;
                 left: 0px;
@@ -34,7 +34,7 @@
                 flex-direction: column;
                 align-items: center;
             }
-            .bookmark-item-container {
+            .history-item-container {
                 position:relative;
                 margin-top: 10px;
                 width: 80%;
@@ -44,13 +44,13 @@
                 border-radius: 5px;
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
             }
-            .bookmark-item-container:hover {
+            .history-item-container:hover {
                 background-color: #F8F8F8;
             }
             .item-name {
                 position: absolute;
                 left: 20px;
-                right: 100px;
+                right: 200px;
                 top: 0px;
                 bottom: 0px;
                 height: 30px;
@@ -59,14 +59,37 @@
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                color: #000000
             }
-            .item-delete-button {
+            .item-time {
+                position: absolute;
+                right: 20px;
+                top: 0px;
+                bottom: 0px;
+                height: 30px;
+                display: inline-block;
+                vertical-align: middle;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: #888888;
+            }
+            .history-head {
+                position: relative;
+                display: flex;
+                align-items: center;
+                width: 80%;
+                height: 50px;
+                font-size: 16px;
+                color: #888888;
+            }
+            .delete-button {
                 position: absolute;
                 right: 20px;
                 top: 10px;
                 display: inline-block;
                 vertical-align: middle;
-                width: 50px;
+                width: 80px;
                 height: 30px;
                 border: none;
                 background-color: #FF0000;
@@ -74,17 +97,23 @@
                 color: #FFFFFF;
                 text-align: center;
             }
-            .item-delete-button:hover {
+            .delete-button:hover {
                 background-color: #DD0000;
             }
         </style>
     </head>
     <body>
         <div class="page-head">
-            <p style="margin-left: 50px;">书签</p>
+            <p style="margin-left: 50px;">历史</p>
         </div>
-        <div class="bookmarks-container">
-            {% BOOKMARKS_DATA %}
+        <div class="history-container">
+            <div class="history-head">
+                <span style="margin-left: 20px;">近期历史记录</span>
+                <button class="delete-button" onclick="window.location.href='cu://history/clear'; return false;">
+                    <span>清空历史</span>                                                                                    
+                </button>
+            </div>
+            {% HISTORY_DATA %}
         </div>
     </body>
 </html>

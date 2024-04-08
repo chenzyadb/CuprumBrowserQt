@@ -1,204 +1,276 @@
-// CuLogger V1 by chenzyadb.
+// CuLogger V3 by chenzyadb.
+// Based on C++14 STL (MSVC).
 
-#ifndef _CU_LOGGER_H
-#define _CU_LOGGER_H
+#ifndef _CU_LOGGER_
+#define _CU_LOGGER_
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4996)
-#endif
+#endif // defined(_MSC_VER)
 
+#include <chrono>
+#include <mutex>
+#include <string>
+#include <vector>
+#include <thread>
+#include <functional>
+#include <exception>
+#include <memory>
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
-#include <ctime>
-#include <iostream>
-#include <stdexcept>
-#include <memory>
-#include <mutex>
-#include <string>
 
-class CuLogger
+namespace CU
 {
-	public:
-		static constexpr char LOG_PATH_NONE[] = "NONE";
-		static constexpr int LOG_NONE = -1;
-		static constexpr int LOG_ERROR = 0;
-		static constexpr int LOG_WARNING = 1;
-		static constexpr int LOG_INFO = 2;
-		static constexpr int LOG_DEBUG = 3;
+	class LoggerExcept : public std::exception
+	{
+		public:
+			LoggerExcept(const std::string &message) : message_(message) { }
 
-		static void CreateLogger(const int &logLevel, const std::string &logPath)
-		{
-			if (instance_ != nullptr) {
-				throw std::runtime_error("Logger already exist.");
-			}
-			std::call_once(flag_, CuLogger::CreateInstance_);
-			if (logLevel >= LOG_NONE && logLevel <= LOG_DEBUG) {
-				logLevel_ = logLevel;
-			}
-			if (logLevel_ != LOG_NONE) {
-				if (CreateLog_(logPath)) {
-					logPath_ = logPath;
-				} else {
-					logLevel_ = LOG_NONE;
-				}
-			}
-		}
-
-		static CuLogger* GetLogger()
-		{
-			if (instance_ == nullptr) {
-				throw std::runtime_error("Logger has not been created.");
-			}
-
-			return instance_;
-		}
-
-		void ResetLogLevel(const int &logLevel)
-		{
-			if (logLevel >= LOG_NONE && logLevel <= LOG_DEBUG) {
-				logLevel_ = logLevel;
-			}
-		}
-
-		void Error(const char* format, ...) const
-		{
-			std::string logText = "";
+			const char* what() const noexcept override
 			{
-				va_list arg;
-				va_start(arg, format);
-				int size = vsnprintf(nullptr, 0, format, arg);
-				va_end(arg);
-				if (size > 0) {
-					logText.resize((size_t)size + 1);
-					va_start(arg, format);
-					vsnprintf(&logText[0], logText.size(), format, arg);
-					va_end(arg);
-				}
-				logText.resize(strlen(logText.c_str()));
+				return message_.c_str();
 			}
-			if (logLevel_ >= LOG_ERROR) {
-				logText = GetTimeInfo_() + " [E] " + logText + "\n";
-				WriteLog_(logText);
-			}
-		}
 
-		void Warning(const char* format, ...) const
-		{
-			std::string logText = "";
+		private:
+			const std::string message_;
+	};
+
+	class Logger
+	{
+		public:
+			enum class LogLevel : uint8_t {NONE, ERROR, WARN, INFO, DEBUG, VERBOSE};
+
+			static Logger* Create(const LogLevel &level, const std::string &path)
 			{
-				va_list arg;
-				va_start(arg, format);
-				int size = vsnprintf(nullptr, 0, format, arg);
-				va_end(arg);
-				if (size > 0) {
-					logText.resize((size_t)size + 1);
-					va_start(arg, format);
-					vsnprintf(&logText[0], logText.size(), format, arg);
-					va_end(arg);
-				}
-				logText.resize(strlen(logText.c_str()));
+				auto instance = getInstance_();
+				instance->setLogger_(level, path);
+				return instance;
 			}
-			if (logLevel_ >= LOG_WARNING) {
-				logText = GetTimeInfo_() + " [W] " + logText + "\n";
-				WriteLog_(logText);
-			}
-		}
 
-		void Info(const char* format, ...) const
-		{
-			std::string logText = "";
+			static void Error(const char* format, ...)
 			{
-				va_list arg;
-				va_start(arg, format);
-				int size = vsnprintf(nullptr, 0, format, arg);
-				va_end(arg);
-				if (size > 0) {
-					logText.resize((size_t)size + 1);
-					va_start(arg, format);
-					vsnprintf(&logText[0], logText.size(), format, arg);
-					va_end(arg);
+				va_list args{};
+				va_start(args, format);
+				int len = vsnprintf(nullptr, 0, format, args);
+				va_end(args);
+				if (len > 0) {
+					int size = len + 1;
+					auto buffer = new char[size];
+					memset(buffer, 0, size);
+					va_start(args, format);
+					vsnprintf(buffer, size, format, args);
+					va_end(args);
+					auto instance = getInstance_();
+					instance->joinLogQueue_(LogLevel::ERROR, buffer);
+					delete[] buffer;
 				}
-				logText.resize(strlen(logText.c_str()));
 			}
-			if (logLevel_ >= LOG_INFO) {
-				logText = GetTimeInfo_() + " [I] " + logText + "\n";
-				WriteLog_(logText);
-			}
-		}
 
-		void Debug(const char* format, ...) const
-		{
-			std::string logText = "";
+			static void Warn(const char* format, ...)
 			{
-				va_list arg;
-				va_start(arg, format);
-				int size = vsnprintf(nullptr, 0, format, arg);
-				va_end(arg);
-				if (size > 0) {
-					logText.resize((size_t)size + 1);
-					va_start(arg, format);
-					vsnprintf(&logText[0], logText.size(), format, arg);
-					va_end(arg);
+				va_list args{};
+				va_start(args, format);
+				int len = vsnprintf(nullptr, 0, format, args);
+				va_end(args);
+				if (len > 0) {
+					int size = len + 1;
+					auto buffer = new char[size];
+					memset(buffer, 0, size);
+					va_start(args, format);
+					vsnprintf(buffer, size, format, args);
+					va_end(args);
+					auto instance = getInstance_();
+					instance->joinLogQueue_(LogLevel::WARN, buffer);
+					delete[] buffer;
 				}
-				logText.resize(strlen(logText.c_str()));
-			}
-			if (logLevel_ >= LOG_DEBUG) {
-				logText = GetTimeInfo_() + " [D] " + logText + "\n";
-				WriteLog_(logText);
-			}
-		}
-
-	private:
-		CuLogger() = default;
-		CuLogger(const CuLogger&) = delete;
-		CuLogger &operator=(const CuLogger&) = delete;
-
-		static void CreateInstance_()
-		{
-			instance_ = new CuLogger();
-		}
-
-		static bool CreateLog_(const std::string &logPath)
-		{
-			bool created = false;
-			FILE* fp = fopen(logPath.c_str(), "w");
-			if (fp) {
-				fputs("", fp);
-				fflush(fp);
-				fclose(fp);
-				created = true;
 			}
 
-			return created;
-		}
-
-		void WriteLog_(const std::string &text) const
-		{
-			FILE* fp = fopen(logPath_.c_str(), "a");
-			if (fp) {
-				fputs(text.c_str(), fp);
-				fflush(fp);
-				fclose(fp);
+			static void Info(const char* format, ...)
+			{
+				va_list args{};
+				va_start(args, format);
+				int len = vsnprintf(nullptr, 0, format, args);
+				va_end(args);
+				if (len > 0) {
+					int size = len + 1;
+					auto buffer = new char[size];
+					memset(buffer, 0, size);
+					va_start(args, format);
+					vsnprintf(buffer, size, format, args);
+					va_end(args);
+					auto instance = getInstance_();
+					instance->joinLogQueue_(LogLevel::INFO, buffer);
+					delete[] buffer;
+				}
 			}
-		}
 
-		std::string GetTimeInfo_() const
-		{
-			std::string timeInfo = std::string(16, '\0');
-			time_t time_stamp = time(nullptr);
-			struct tm time = *localtime(&time_stamp);
-			snprintf(&timeInfo[0], timeInfo.size(), "%02d-%02d %02d:%02d:%02d",
-					time.tm_mon + 1, time.tm_mday, time.tm_hour, time.tm_min, time.tm_sec);
-			timeInfo.resize(strlen(timeInfo.c_str()));
+			static void Debug(const char* format, ...)
+			{
+				va_list args{};
+				va_start(args, format);
+				int len = vsnprintf(nullptr, 0, format, args);
+				va_end(args);
+				if (len > 0) {
+					int size = len + 1;
+					auto buffer = new char[size];
+					memset(buffer, 0, size);
+					va_start(args, format);
+					vsnprintf(buffer, size, format, args);
+					va_end(args);
+					auto instance = getInstance_();
+					instance->joinLogQueue_(LogLevel::DEBUG, buffer);
+					delete[] buffer;
+				}
+			}
 
-			return timeInfo;
-		}
+			static void Verbose(const char* format, ...)
+			{
+				va_list args{};
+				va_start(args, format);
+				int len = vsnprintf(nullptr, 0, format, args);
+				va_end(args);
+				if (len > 0) {
+					int size = len + 1;
+					auto buffer = new char[size];
+					memset(buffer, 0, size);
+					va_start(args, format);
+					vsnprintf(buffer, size, format, args);
+					va_end(args);
+					auto instance = getInstance_();
+					instance->joinLogQueue_(LogLevel::VERBOSE, buffer);
+					delete[] buffer;
+				}
+			}
 
-		static CuLogger* instance_;
-		static std::once_flag flag_;
-		static std::string logPath_;
-		static int logLevel_;
-};
+			static void Flush()
+			{
+				auto instance = getInstance_();
+				instance->flushLogQueue_();
+			}
 
-#endif
+		private:
+			Logger() : logPath_(), logLevel_(), cv_(), mtx_(), logQueue_(), queueFlushed_(true) { }
+			Logger(const Logger &other) = delete;
+			Logger(Logger &&other) = delete;
+			Logger &operator=(const Logger &other) = delete;
+
+			static Logger* getInstance_()
+			{
+				static Logger* instance = nullptr;
+				if (instance == nullptr) {
+					instance = new Logger();
+				}
+				return instance;
+			}
+
+			void setLogger_(const LogLevel &level, const std::string &path)
+			{
+				static const auto createFile = [](const std::string &filePath) -> bool {
+					auto fp = fopen(filePath.c_str(), "wt");
+					if (fp) {
+						fclose(fp);
+						return true;
+					}
+					return false;
+				};
+
+				if (logLevel_ == LogLevel::NONE && level != LogLevel::NONE) {
+					logLevel_ = level;
+					logPath_ = path;
+					if (!createFile(logPath_)) {
+						throw LoggerExcept("Can not create log file");
+					}
+					std::thread thread_(std::bind(&Logger::mainLoop_, this));
+					thread_.detach();
+				}
+			}
+
+			void mainLoop_()
+			{
+				auto fp = fopen(logPath_.c_str(), "at");
+				if (!fp) {
+					throw LoggerExcept("Failed to open log file");
+				}
+				std::vector<std::string> writeQueue{};
+				for (;;) {
+					{
+						std::unique_lock<std::mutex> lck(mtx_);
+						queueFlushed_ = logQueue_.empty();
+						while (logQueue_.empty()) {
+							cv_.wait(lck);
+						}
+						writeQueue = logQueue_;
+						logQueue_.clear();
+					}
+					if (!writeQueue.empty()) {
+						for (const auto &log : writeQueue) {
+							fputs(log.c_str(), fp);
+						}
+						fflush(fp);
+						writeQueue.clear();
+					}
+				}
+			}
+
+			void joinLogQueue_(const LogLevel &level, const char* content)
+			{
+				static const auto getTimeInfo = []() -> std::string {
+					auto now = std::chrono::system_clock::now();
+					auto nowTime = std::chrono::system_clock::to_time_t(now);
+					auto localTime = std::localtime(std::addressof(nowTime));
+					char buffer[16] = { 0 };
+					snprintf(buffer, sizeof(buffer), "%02d-%02d %02d:%02d:%02d",
+						localTime->tm_mon + 1, localTime->tm_mday, localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+					std::string timeInfo(buffer);
+					return timeInfo;
+				};
+				{
+					std::unique_lock<std::mutex> lck(mtx_);
+					if (level <= logLevel_) {
+						switch (level) {
+							case LogLevel::ERROR:
+								logQueue_.emplace_back(getTimeInfo() + " [E] " + content + '\n');
+								break;
+							case LogLevel::WARN:
+								logQueue_.emplace_back(getTimeInfo() + " [W] " + content + '\n');
+								break;
+							case LogLevel::INFO:
+								logQueue_.emplace_back(getTimeInfo() + " [I] " + content + '\n');
+								break;
+							case LogLevel::DEBUG:
+								logQueue_.emplace_back(getTimeInfo() + " [D] " + content + '\n');
+								break;
+							case LogLevel::VERBOSE:
+								logQueue_.emplace_back(getTimeInfo() + " [V] " + content + '\n');
+								break;
+							default:
+								break;
+						}
+						cv_.notify_all();
+					}
+				}
+			}
+
+			void flushLogQueue_()
+			{
+				bool flushed = false;
+				while (!flushed) {
+					{
+						std::unique_lock<std::mutex> lck(mtx_);
+						flushed = queueFlushed_;
+					}
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				}
+			}
+
+			std::string logPath_;
+			LogLevel logLevel_;
+			std::condition_variable cv_;
+			std::mutex mtx_;
+			std::vector<std::string> logQueue_;
+			bool queueFlushed_;
+		};
+}
+
+#endif // !defined(_CU_LOGGER_)

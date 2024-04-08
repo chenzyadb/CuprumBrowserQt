@@ -1,26 +1,22 @@
 #pragma once
 
-#include <iostream>
-#include "utils/utils.h"
-#include "utils/JsonObject.h"
+#include "utils/qt_misc.h"
+#include "utils/CuJSONObject.h"
+#include "utils/CuLogger.h"
+#include "widgets/CuWebView.h"
 
-#include <QObject>
-#include <QFile>
-#include <QBuffer>
-#include <QWebEngineUrlSchemeHandler>
-#include <QWebEngineUrlRequestJob>
 
 class CuSchemeHandler : public QWebEngineUrlSchemeHandler
 {
     Q_OBJECT
     public:
-        explicit CuSchemeHandler(const QString &path);
+        explicit CuSchemeHandler(QObject* parent);
         ~CuSchemeHandler();
         void requestStarted(QWebEngineUrlRequestJob* job) override;
 
     private:
-        QString path_;
-
         QString GetBookmarkHtml_();
-        void DeleteBookmark_(const QString &id);
+        void DeleteBookmark_(const std::string &id);
+        QString GetAboutHtml_();
+        QString GetHistoryHtml_();
 };

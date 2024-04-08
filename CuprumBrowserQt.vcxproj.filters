@@ -37,9 +37,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="utils\CuLogger.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="objects\CuSchemeHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,16 +46,13 @@
     <ClCompile Include="widgets\CuWebView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils\JsonObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="windows\MainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils\utils.cpp">
+    <ClCompile Include="utils\CuJSONObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,13 +69,25 @@
     <QtMoc Include="widgets\CuWebView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <ClInclude Include="utils\JsonObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <QtMoc Include="windows\MainWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <ClInclude Include="utils\utils.h">
+    <ClInclude Include="utils\libcu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\CuJSONObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\CuStringMatcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\qt_misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\CuPairList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -94,6 +100,9 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <None Include="html\aboutpage.html">
+      <Filter>Resource Files</Filter>
+    </None>
     <None Include="media\add.png">
       <Filter>Resource Files</Filter>
     </None>
@@ -118,7 +127,7 @@
     <None Include="media\menu.png">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="media\reflash.png">
+    <None Include="media\refresh.png">
       <Filter>Resource Files</Filter>
     </None>
     <QtRcc Include="resources.qrc">
@@ -127,7 +136,7 @@
     <None Include="html\template_bookmarks.html">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="html\aboutpage.html">
+    <None Include="html\template_history.html">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -1,21 +1,13 @@
-#include <iostream>
-#include <exception>
+#include "utils/qt_misc.h"
 #include "utils/CuLogger.h"
-#include "utils/utils.h"
-
-#include <QCoreApplication>
-#include <QApplication>
-#include <QWebEngineUrlScheme>
 #include "windows/MainWindow.h"
 
 int main(int argc, char *argv[])
 {
-    QString path = GetRePrevStringQt(argv[0], '\\');
-    CuLogger::CreateLogger(CuLogger::LOG_DEBUG, path.toStdString() + "\\debug.log");
-    const auto &logger = CuLogger::GetLogger();
-    logger->Info("CuprumBrowser V1 (%d) by chenzyadb.", GetCompileDateCode(__DATE__));
+    CU::Logger::Create(CU::Logger::LogLevel::VERBOSE, GetRePrevString(argv[0], "\\") + "\\debug.log");
+    CU::Logger::Info("CuprumBrowser V1 (%d) by chenzyadb.", GetCompileDateCode());
 
-    QWebEngineUrlScheme browserScheme = QWebEngineUrlScheme("cu");
+    QWebEngineUrlScheme browserScheme("cu");
     browserScheme.setSyntax(QWebEngineUrlScheme::Syntax::HostAndPort);
     browserScheme.setDefaultPort(8000);
     browserScheme.setFlags(
@@ -26,14 +18,24 @@ int main(int argc, char *argv[])
         QWebEngineUrlScheme::CorsEnabled);
     QWebEngineUrlScheme::registerScheme(browserScheme);
 
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling, true);
     QApplication app(argc, argv);
-    logger->Info("Application Created.");
+    app.setAttribute(Qt::AA_PluginApplication, false);
+    app.setAttribute(Qt::AA_DontShowIconsInMenus, true);
+    app.setAttribute(Qt::AA_NativeWindows, false);
+    app.setAttribute(Qt::AA_DontCreateNativeWidgetSiblings, true);
+    app.setAttribute(Qt::AA_DontUseNativeMenuBar, true);
+    app.setAttribute(Qt::AA_DontUseNativeDialogs, true);
+    app.setAttribute(Qt::AA_UseDesktopOpenGL, true);
+    app.setAttribute(Qt::AA_UseOpenGLES, true);
+    app.setAttribute(Qt::AA_UseSoftwareOpenGL, false);
+    app.setAttribute(Qt::AA_ShareOpenGLContexts, true);
+    app.setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, true);
+    CU::Logger::Info("Application Created.");
 
-    MainWindow* mainWindow = new MainWindow(path);
-    mainWindow->show();
+    auto window = new MainWindow();
+    window->show();
 
-    int appExecRet = app.exec();
-    logger->Info("Application exited, return %d.", appExecRet);
-    return appExecRet;
+    int appRet = app.exec();
+    CU::Logger::Info("Application closed, return %d.", appRet);
+    return appRet;
 }

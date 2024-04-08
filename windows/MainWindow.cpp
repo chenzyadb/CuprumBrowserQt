@@ -1,6 +1,9 @@
-#include "windows/MainWindow.h"
+#include "MainWindow.h"
 
-constexpr char buttonStyle[] =
+constexpr char windowStyle[] =
+    "QMainWindow {                                                               "
+    "   background-color: #FFFFFF;                                               "
+    "}                                                                           "
     "QPushButton {                                                               "
     "   border: none;                                                            "
     "   background-color: #FFFFFF;                                               "
@@ -13,23 +16,27 @@ constexpr char buttonStyle[] =
     "QPushButton:pressed {                                                       "
     "   background-color: #E8E8E8;                                               "
     "}                                                                           "
-    "QPushButton::menu-indicator { width: 0; height: 0; }                        ";
-
-constexpr char menuStyle[] =
-    "QMenu::item {                                                               "
+    "QPushButton::menu-indicator {                                               "
+    "   width: 0;                                                                "
+    "   height: 0;                                                               "
+    "}                                                                           "
+    "QMenu {                                                                     "
+    "   background-color: #F8F8F8;                                               "
     "   padding: 5px;                                                            "
-    "   background-color: #FFFFFF;                                               "
+    "}                                                                           "
+    "QMenu::item {                                                               "
+    "   border-radius: 5px;                                                      "
+    "   padding: 5px;                                                            "
+    "   background-color: #F8F8F8;                                               "
     "   font-size: 12px;                                                         "
     "   color: #000000;                                                          "
     "}                                                                           "
     "QMenu::item:selected {                                                      "
-    "   background-color: #F0F0F0;                                               "
+    "   background-color: #E8E8E8;                                               "
     "}                                                                           "
     "QMenu::item:pressed {                                                       "
     "   background-color: #E0E0E0;                                               "
-    "}                                                                           ";
-
-constexpr char editStyle[] =
+    "}                                                                           "
     "QLineEdit {                                                                 "
     "   border: none;                                                            "
     "   background-color: #F0F0F0;                                               "
@@ -47,11 +54,9 @@ constexpr char editStyle[] =
     "}                                                                           ";
 
 
-MainWindow::MainWindow(const QString &path) :
+MainWindow::MainWindow() :
     QMainWindow(),
-    logger_(CuLogger::GetLogger()),
-    path_(path),
-    browserProfile_(nullptr),
+    urlMatcher_("(http://|https://|cu://|file:///)*"),
     baseWidget_(nullptr),
     baseLayout_(nullptr),
     controlBarLayout_(nullptr),
@@ -59,59 +64,19 @@ MainWindow::MainWindow(const QString &path) :
     loadButton_(nullptr),
     backButton_(nullptr),
     forwardButton_(nullptr),
-    reflashButton_(nullptr),
+    refreshButton_(nullptr),
     menuButton_(nullptr),
     browserTabLayout_(nullptr),
     addButton_(nullptr),
-    buttonToWindow_(),
-    windowToButton_(),
+    buttonWindowPairs_(),
     topBrowserWindow_(nullptr),
     browserMenu_(nullptr)
 {
-    setAttribute(Qt::WA_DeleteOnClose, true);
-    setFocusPolicy(Qt::ClickFocus);
     resize(1000, 600);
     setMinimumSize(800, 500);
     setWindowIcon(QIcon(":/res/media/cu_icon.ico"));
     setWindowTitle("CuprumBrowserQt");
-    setStyleSheet("background-color: #FFFFFF;");
-    {
-        browserProfile_ = new QWebEngineProfile(QString::fromLatin1("CuprumBrowserQt.%1").arg(qWebEngineChromiumVersion()));
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::AutoLoadImages, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::LocalStorageEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::DnsPrefetchEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::JavascriptEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::JavascriptCanOpenWindows, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::JavascriptCanAccessClipboard, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::JavascriptCanPaste, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessRemoteUrls, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::LocalContentCanAccessFileUrls, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::XSSAuditingEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::ScrollAnimatorEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::WebGLEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::WebRTCPublicInterfacesOnly, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::PluginsEnabled, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::FullScreenSupportEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::ScreenCaptureEnabled, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::HyperlinkAuditingEnabled, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::AllowRunningInsecureContent, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::AllowGeolocationOnInsecureOrigins, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::AllowWindowActivationFromJavaScript, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::ShowScrollBars, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::PlaybackRequiresUserGesture, false);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::PdfViewerEnabled, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::AutoLoadIconsForPage, true);
-        browserProfile_->settings()->setAttribute(QWebEngineSettings::NavigateOnDropEnabled, true);
-        QString browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                                   "Chrome/" + QString(qWebEngineChromiumVersion()) + " Safari/537.36";
-        browserProfile_->setHttpUserAgent(browserUserAgent);
-        browserProfile_->setPersistentCookiesPolicy(QWebEngineProfile::AllowPersistentCookies);
-        browserProfile_->setHttpCacheType(QWebEngineProfile::MemoryHttpCache);
-        browserProfile_->installUrlSchemeHandler("cu", new CuSchemeHandler(path_));
-        QObject::connect(browserProfile_, &QWebEngineProfile::downloadRequested, this, &MainWindow::Browser_onDownloadRequested);
-    }
+    setStyleSheet(windowStyle);
     {
         baseWidget_ = new QWidget(this);
         this->setCentralWidget(baseWidget_);
@@ -126,7 +91,7 @@ MainWindow::MainWindow(const QString &path) :
     {
         controlBarLayout_ = new QHBoxLayout();
         controlBarLayout_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        controlBarLayout_->setContentsMargins(2, 0, 2, 0);
+        controlBarLayout_->setContentsMargins(4, 4, 4, 0);
         controlBarLayout_->setSpacing(2);
         baseLayout_->addLayout(controlBarLayout_);
     }
@@ -134,10 +99,10 @@ MainWindow::MainWindow(const QString &path) :
         backButton_ = new QPushButton(baseWidget_);
         backButton_->setFixedSize(30, 30);
         backButton_->setIcon(QIcon(":/res/media/back.png"));
-        backButton_->setStyleSheet(buttonStyle);
+        backButton_->setIconSize(QSize(20, 20));
         backButton_->setContentsMargins(0, 0, 0, 0);
         backButton_->setToolTip("Go back.");
-        QObject::connect(backButton_, &QPushButton::clicked, this, [=](){
+        connect(backButton_, &QPushButton::clicked, this, [this]() {
             GoBack_();
         });
         controlBarLayout_->addWidget(backButton_);
@@ -146,35 +111,34 @@ MainWindow::MainWindow(const QString &path) :
         forwardButton_ = new QPushButton(baseWidget_);
         forwardButton_->setFixedSize(30, 30);
         forwardButton_->setIcon(QIcon(":/res/media/forward.png"));
-        forwardButton_->setStyleSheet(buttonStyle);
+        forwardButton_->setIconSize(QSize(20, 20));
         forwardButton_->setContentsMargins(0, 0, 0, 0);
         forwardButton_->setToolTip("Go forward.");
-        QObject::connect(forwardButton_, &QPushButton::clicked, this, [=](){
+        connect(forwardButton_, &QPushButton::clicked, this, [this]() {
             GoForward_();
         });
         controlBarLayout_->addWidget(forwardButton_);
     }
     {
-        reflashButton_ = new QPushButton(baseWidget_);
-        reflashButton_->setFixedSize(30, 30);
-        reflashButton_->setIcon(QIcon(":/res/media/reflash.png"));
-        reflashButton_->setStyleSheet(buttonStyle);
-        reflashButton_->setContentsMargins(0, 0, 0, 0);
-        reflashButton_->setToolTip("Reflash page.");
-        QObject::connect(reflashButton_, &QPushButton::clicked, this, [=](){
-            Reflash_();
+        refreshButton_ = new QPushButton(baseWidget_);
+        refreshButton_->setFixedSize(30, 30);
+        refreshButton_->setIcon(QIcon(":/res/media/refresh.png"));
+        refreshButton_->setIconSize(QSize(20, 20));
+        refreshButton_->setContentsMargins(0, 0, 0, 0);
+        refreshButton_->setToolTip("Refresh page.");
+        connect(refreshButton_, &QPushButton::clicked, this, [this]() {
+            Refresh_();
         });
-        controlBarLayout_->addWidget(reflashButton_);
+        controlBarLayout_->addWidget(refreshButton_);
     }
     {
         urlEdit_ = new QLineEdit(baseWidget_);
         urlEdit_->setMinimumHeight(30);
         urlEdit_->setMaximumHeight(30);
-        urlEdit_->setStyleSheet(editStyle);
         urlEdit_->setContentsMargins(0, 0, 0, 0);
         urlEdit_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         urlEdit_->setToolTip("Enter your url.");
-        QObject::connect(urlEdit_, &QLineEdit::returnPressed, this, [=](){
+        connect(urlEdit_, &QLineEdit::returnPressed, this, [this]() {
             LoadUrl_(urlEdit_->text());
         });
         controlBarLayout_->addWidget(urlEdit_);
@@ -183,7 +147,7 @@ MainWindow::MainWindow(const QString &path) :
         menuButton_ = new QPushButton(baseWidget_);
         menuButton_->setFixedSize(30, 30);
         menuButton_->setIcon(QIcon(":/res/media/menu.png"));
-        menuButton_->setStyleSheet(buttonStyle);
+        menuButton_->setIconSize(QSize(20, 20));
         menuButton_->setContentsMargins(0, 0, 0, 0);
         menuButton_->setToolTip("Browser menu.");
         controlBarLayout_->addWidget(menuButton_);
@@ -191,19 +155,19 @@ MainWindow::MainWindow(const QString &path) :
     {
         browserTabLayout_ = new QHBoxLayout();
         browserTabLayout_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        browserTabLayout_->setContentsMargins(2, 2, 2, 2);
-        browserTabLayout_->setSpacing(2);
+        browserTabLayout_->setContentsMargins(4, 4, 4, 4);
+        browserTabLayout_->setSpacing(4);
         baseLayout_->addLayout(browserTabLayout_);
     }
     {
         addButton_ = new QPushButton(baseWidget_);
         addButton_->setFixedSize(30, 30);
         addButton_->setIcon(QIcon(":/res/media/add.png"));
-        addButton_->setStyleSheet(buttonStyle);
+        addButton_->setIconSize(QSize(20, 20));
         addButton_->setContentsMargins(0, 0, 0, 0);
         addButton_->setToolTip("Browser menu.");
-        QObject::connect(addButton_, &QPushButton::clicked, this, [=](){
-            AddBrowserWindow_(new CuWebView(baseWidget_, browserProfile_));
+        connect(addButton_, &QPushButton::clicked, this, [this]() {
+            AddBrowserWindow_(new CuWebView(baseWidget_));
             LoadUrl_("cu://home/");
         });
         browserTabLayout_->addWidget(addButton_);
@@ -211,105 +175,126 @@ MainWindow::MainWindow(const QString &path) :
     {
         browserMenu_ = new QMenu(menuButton_);
         browserMenu_->setFixedWidth(200);
-        browserMenu_->setStyleSheet(menuStyle);
         {
-            QAction* addTap = new QAction(browserMenu_);
+            auto addTap = new QAction(browserMenu_);
             addTap->setShortcuts(QKeySequence::AddTab);
             addTap->setText("添加标签页");
-            QObject::connect(addTap, &QAction::triggered, this, [=](){
-                AddBrowserWindow_(new CuWebView(baseWidget_, browserProfile_));
+            connect(addTap, &QAction::triggered, this, [this]() {
+                AddBrowserWindow_(new CuWebView(baseWidget_));
                 LoadUrl_("cu://home/");
             });
             browserMenu_->addAction(addTap);
         }
         {
-            QAction* removeTab = new QAction(browserMenu_);
-            removeTab->setShortcuts(QKeySequence::Close);
+            auto removeTab = new QAction(browserMenu_);
+            removeTab->setShortcut(QKeySequence("Ctrl+X"));
             removeTab->setText("关闭当前标签页");
-            QObject::connect(removeTab, &QAction::triggered, this, [=](){
-                RemoveBrowserWindow_(windowToButton_.at(topBrowserWindow_));
+            connect(removeTab, &QAction::triggered, this, [this]() {
+                RemoveBrowserWindow_(buttonWindowPairs_(topBrowserWindow_));
             });
             browserMenu_->addAction(removeTab);
         }
         browserMenu_->addSeparator();
         {
-            QAction* openHomePage = new QAction(browserMenu_);
-            openHomePage->setShortcuts(QKeySequence::Open);
+            auto openHomePage = new QAction(browserMenu_);
+            openHomePage->setShortcut(QKeySequence("Ctrl+H"));
             openHomePage->setText("打开首页");
-            QObject::connect(openHomePage, &QAction::triggered, this, [=](){
+            connect(openHomePage, &QAction::triggered, this, [this](){
                 LoadUrl_("cu://home/");
             });
             browserMenu_->addAction(openHomePage);
         }
         {
-            QAction* openBookmark = new QAction(browserMenu_);
-            openBookmark->setShortcuts(QKeySequence::Bold);
+            auto openBookmark = new QAction(browserMenu_);
+            openBookmark->setShortcut(QKeySequence("Ctrl+B"));
             openBookmark->setText("打开书签页");
-            QObject::connect(openBookmark, &QAction::triggered, this, [=](){
+            connect(openBookmark, &QAction::triggered, this, [this](){
                 LoadUrl_("cu://bookmarks/");
             });
             browserMenu_->addAction(openBookmark);
         }
+        {
+            auto openHistory = new QAction(browserMenu_);
+            openHistory->setShortcut(QKeySequence("Ctrl+J"));
+            openHistory->setText("打开历史记录");
+            connect(openHistory, &QAction::triggered, this, [this]() {
+                LoadUrl_("cu://history/");
+            });
+            browserMenu_->addAction(openHistory);
+        }
         browserMenu_->addSeparator();
         {
-            QAction* addBookmark = new QAction(browserMenu_);
-            addBookmark->setShortcuts(QKeySequence::New);
+            auto addBookmark = new QAction(browserMenu_);
+            addBookmark->setShortcut(QKeySequence("Ctrl+D"));
             addBookmark->setText("将此页加入书签");
-            QObject::connect(addBookmark, &QAction::triggered, this, [=](){
+            connect(addBookmark, &QAction::triggered, this, [this](){
                 AddBookmark_();
             });
             browserMenu_->addAction(addBookmark);
         }
         {
-            QAction* zoomIn = new QAction(browserMenu_);
+            auto findPageText = new QAction(browserMenu_);
+            findPageText->setShortcut(QKeySequence("Ctrl+F"));
+            findPageText->setText("查找页面内容");
+            connect(findPageText, &QAction::triggered, this, &MainWindow::FindPageText_);
+            browserMenu_->addAction(findPageText);
+        }
+        {
+            auto zoomIn = new QAction(browserMenu_);
             zoomIn->setShortcuts(QKeySequence::ZoomIn);
             zoomIn->setText("放大当前页面");
-            QObject::connect(zoomIn, &QAction::triggered, this, [=](){
+            connect(zoomIn, &QAction::triggered, this, [this](){
                 SetPageZoomIn_();
             });
             browserMenu_->addAction(zoomIn);
         }
         {
-            QAction* zoomOut = new QAction(browserMenu_);
+            auto zoomOut = new QAction(browserMenu_);
             zoomOut->setShortcuts(QKeySequence::ZoomOut);
             zoomOut->setText("缩小当前页面");
-            QObject::connect(zoomOut, &QAction::triggered, this, [=](){
+            connect(zoomOut, &QAction::triggered, this, [this](){
                 SetPageZoomOut_();
             });
             browserMenu_->addAction(zoomOut);
         }
         {
-            QAction* resetZoom = new QAction(browserMenu_);
+            auto resetZoom = new QAction(browserMenu_);
             resetZoom->setShortcut(QKeySequence("Ctrl+R"));
             resetZoom->setText("还原当前页面缩放");
-            QObject::connect(resetZoom, &QAction::triggered, this, [=](){
+            connect(resetZoom, &QAction::triggered, this, [this](){
                 ResetPageZoom_();
             });
             browserMenu_->addAction(resetZoom);
         }
         {
-            QAction* openDevTool = new QAction(browserMenu_);
+            auto openDevTool = new QAction(browserMenu_);
             openDevTool->setShortcut(QKeySequence("F12"));
             openDevTool->setText("打开开发人员工具");
-            QObject::connect(openDevTool, &QAction::triggered, this, [=](){
+            connect(openDevTool, &QAction::triggered, this, [this](){
                 OpenDevTool_();
             });
             browserMenu_->addAction(openDevTool);
         }
         browserMenu_->addSeparator();
         {
-            QAction* aboutBrowser = new QAction(browserMenu_);
+            auto aboutQt = new QAction(browserMenu_);
+            aboutQt->setText("关于Qt");
+            connect(aboutQt, &QAction::triggered, this, &QApplication::aboutQt);
+            browserMenu_->addAction(aboutQt);
+        }
+        {
+            auto aboutBrowser = new QAction(browserMenu_);
             aboutBrowser->setText("关于浏览器");
-            QObject::connect(aboutBrowser, &QAction::triggered, this, [=]() {
+            connect(aboutBrowser, &QAction::triggered, this, [this]() {
                 LoadUrl_("cu://about/");
             });
             browserMenu_->addAction(aboutBrowser);
         }
         {
-            QAction* quitBrowser = new QAction(browserMenu_);
-            quitBrowser->setShortcut(QKeySequence("Alt+Esc"));
+            auto quitBrowser = new QAction(browserMenu_);
+            quitBrowser->setShortcut(QKeySequence("Ctrl+Q"));
             quitBrowser->setText("退出");
-            QObject::connect(quitBrowser, &QAction::triggered, this, [=](){
+            connect(quitBrowser, &QAction::triggered, this, [this](){
                 close();
             });
             browserMenu_->addAction(quitBrowser);
@@ -317,27 +302,21 @@ MainWindow::MainWindow(const QString &path) :
         menuButton_->setMenu(browserMenu_);
     }
     {
-        AddBrowserWindow_(new CuWebView(baseWidget_, browserProfile_));
+        connect(CuWebView::GetWebEngineProfile_(), &QWebEngineProfile::downloadRequested, this, &MainWindow::onDownloadRequested_);
+        AddBrowserWindow_(new CuWebView(baseWidget_));
         LoadUrl_("cu://home/");
     }
-    logger_->Info("MainWindow created.");
 }
 
 MainWindow::~MainWindow() { }
 
-void MainWindow::resizeEvent(QResizeEvent* event)
-{
-    Q_UNUSED(event);
-    if (urlEdit_ != nullptr) {
-        urlEdit_->setCursorPosition(0);
-    }
-}
-
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    browserProfile_->clearAllVisitedLinks();
-    browserProfile_->clearHttpCache();
-    logger_->Info("MainWindow closed.");
+    BookmarkProvider::SaveToDisk();
+    HistoryProvider::SaveToDisk();
+    auto profile = CuWebView::GetWebEngineProfile_();
+    profile->clearAllVisitedLinks();
+    profile->clearHttpCache();
     event->accept();
     deleteLater();
 }
@@ -345,127 +324,58 @@ void MainWindow::closeEvent(QCloseEvent* event)
 void MainWindow::AddBrowserWindow_(CuWebView* newBrowserWindow)
 {
     if (topBrowserWindow_ != nullptr) {
-        {
-            QObject::disconnect(topBrowserWindow_, &CuWebView::urlChanged, this, &MainWindow::Browser_onUrlChanged);
-            QObject::disconnect(topBrowserWindow_, &CuWebView::titleChanged, this, &MainWindow::Browser_onTitleChanged);
-            QObject::disconnect(topBrowserWindow_, &CuWebView::iconChanged, this, &MainWindow::Browser_onIconChanged);
-            QObject::disconnect(topBrowserWindow_, &CuWebView::NewWindowCreated, this, &MainWindow::Browser_onNewWindowCreated);
-            topBrowserWindow_->setEnabled(false);
-            topBrowserWindow_->setVisible(false);
-        }
-        {
-            const auto &topWindowTabButton = windowToButton_.at(topBrowserWindow_);
-            topWindowTabButton->SetFocused(false);
-        }
+        topBrowserWindow_->setEnabled(false);
+        topBrowserWindow_->setVisible(false);
+        buttonWindowPairs_(topBrowserWindow_)->setFocus(false);
     }
-    {
-        topBrowserWindow_ = newBrowserWindow;
-        const auto &newTabButton = new CuTabButton(baseWidget_);
-        buttonToWindow_[newTabButton] = newBrowserWindow;
-        windowToButton_[newBrowserWindow] = newTabButton;
-        {
-            QObject::connect(newBrowserWindow, &CuWebView::urlChanged, this, &MainWindow::Browser_onUrlChanged);
-            QObject::connect(newBrowserWindow, &CuWebView::titleChanged, this, &MainWindow::Browser_onTitleChanged);
-            QObject::connect(newBrowserWindow, &CuWebView::iconChanged, this, &MainWindow::Browser_onIconChanged);
-            QObject::connect(newBrowserWindow, &CuWebView::NewWindowCreated, this, &MainWindow::Browser_onNewWindowCreated);
-            baseLayout_->addWidget(newBrowserWindow);
-        }
-        {
-            newTabButton->SetFocused(true);
-            newTabButton->setIcon(newBrowserWindow->icon());
-            newTabButton->setText(newBrowserWindow->title());
-            QObject::connect(newTabButton, &CuTabButton::MouseLeftButtonClicked, this, &MainWindow::ChangeTopWindow_);
-            QObject::connect(newTabButton, &CuTabButton::MouseRightButtonClicked, this, &MainWindow::RemoveBrowserWindow_);
-            browserTabLayout_->removeWidget(addButton_);
-            browserTabLayout_->addWidget(newTabButton);
-            browserTabLayout_->addWidget(addButton_);
-        }
-    }
-}
 
-void MainWindow::ChangeTopWindow_(CuTabButton* tabButton)
-{
-    const auto &newTopWindow = buttonToWindow_.at(tabButton);
-    if (topBrowserWindow_ != nullptr) {
-        {
-            QObject::disconnect(topBrowserWindow_, &CuWebView::urlChanged, this, &MainWindow::Browser_onUrlChanged);
-            QObject::disconnect(topBrowserWindow_, &CuWebView::titleChanged, this, &MainWindow::Browser_onTitleChanged);
-            QObject::disconnect(topBrowserWindow_, &CuWebView::iconChanged, this, &MainWindow::Browser_onIconChanged);
-            QObject::disconnect(topBrowserWindow_, &CuWebView::NewWindowCreated, this, &MainWindow::Browser_onNewWindowCreated);
-            topBrowserWindow_->setEnabled(false);
-            topBrowserWindow_->setVisible(false);
-        }
-        {
-            const auto &topWindowTabButton = windowToButton_.at(topBrowserWindow_);
-            topWindowTabButton->SetFocused(false);
-        }
-    }
-    {
-        topBrowserWindow_ = newTopWindow;
-        {
-            QObject::connect(newTopWindow, &CuWebView::urlChanged, this, &MainWindow::Browser_onUrlChanged);
-            QObject::connect(newTopWindow, &CuWebView::titleChanged, this, &MainWindow::Browser_onTitleChanged);
-            QObject::connect(newTopWindow, &CuWebView::iconChanged, this, &MainWindow::Browser_onIconChanged);
-            QObject::connect(newTopWindow, &CuWebView::NewWindowCreated, this, &MainWindow::Browser_onNewWindowCreated);
-            newTopWindow->setEnabled(true);
-            newTopWindow->setVisible(true);
-        }
-        {
-            const auto &tabButton = windowToButton_.at(newTopWindow);
-            tabButton->SetFocused(true);
-        }
-    }
-    {
-        this->setWindowTitle("CuprumBrowserQt - " + newTopWindow->title());
-        urlEdit_->setText(newTopWindow->url().toString());
-        urlEdit_->setCursorPosition(0);
-        tabButton->setIcon(newTopWindow->icon());
-        tabButton->setText(newTopWindow->title());
-    }
-}
+    auto newTabButton = new CuTabButton(baseWidget_);
+    buttonWindowPairs_.add(newTabButton, newBrowserWindow);
+    newTabButton->setFocus(true);
+    newTabButton->setIcon(newBrowserWindow->icon());
+    newTabButton->setText(newBrowserWindow->title());
+    connect(newTabButton, &CuTabButton::onClick, this, &MainWindow::ChangeTopWindow_);
+    connect(newTabButton, &CuTabButton::onCommandClose, this, &MainWindow::RemoveBrowserWindow_);
+    browserTabLayout_->removeWidget(addButton_);
+    browserTabLayout_->addWidget(newTabButton);
+    browserTabLayout_->addWidget(addButton_);
 
-void MainWindow::RemoveBrowserWindow_(CuTabButton* tabButton)
-{
-    const auto &removeWindow = buttonToWindow_.at(tabButton);
-    if (windowToButton_.size() == 1) {
-        removeWindow->load(QUrl("cu://home/"));
-        return;
-    }
-    if (removeWindow == topBrowserWindow_) {
-        for (const auto &[button, window] : buttonToWindow_) {
-            if (button != tabButton) {
-                ChangeTopWindow_(button);
-            }
+    connect(newBrowserWindow, &CuWebView::urlChanged, this, [this, newBrowserWindow](const QUrl &url) {
+        if (topBrowserWindow_ == newBrowserWindow) {
+            urlEdit_->setText(url.toString());
+            urlEdit_->setCursorPosition(0);
         }
-    }
-    {
-        baseLayout_->removeWidget(removeWindow);
-        QObject::disconnect(removeWindow, &CuWebView::urlChanged, this, &MainWindow::Browser_onUrlChanged);
-        QObject::disconnect(removeWindow, &CuWebView::titleChanged, this, &MainWindow::Browser_onTitleChanged);
-        QObject::disconnect(removeWindow, &CuWebView::iconChanged, this, &MainWindow::Browser_onIconChanged);
-        QObject::disconnect(removeWindow, &CuWebView::NewWindowCreated, this, &MainWindow::Browser_onNewWindowCreated);
-        removeWindow->close();
-        removeWindow->deleteLater();
-    }
-    {
-        browserTabLayout_->removeWidget(tabButton);
-        QObject::disconnect(tabButton, &CuTabButton::MouseLeftButtonClicked, this, &MainWindow::ChangeTopWindow_);
-        QObject::disconnect(tabButton, &CuTabButton::MouseRightButtonClicked, this, &MainWindow::RemoveBrowserWindow_);
-        tabButton->deleteLater();
-    }
-    buttonToWindow_.erase(tabButton);
-    windowToButton_.erase(removeWindow);
+    });
+    connect(newBrowserWindow, &CuWebView::titleChanged, this, [this, newBrowserWindow, newTabButton](const QString &title) {
+        if (topBrowserWindow_ == newBrowserWindow) {
+            setWindowTitle("CuprumBrowserQt - " + title);
+        }
+        newTabButton->setText(title);
+    });
+    connect(newBrowserWindow, &CuWebView::iconChanged, this, [newTabButton](const QIcon &icon) {
+        newTabButton->setIcon(icon);
+    });
+    connect(newBrowserWindow, &CuWebView::NewWindowCreated, this, [this, newBrowserWindow](CuWebView* newWindow) {
+        if (!buttonWindowPairs_.containsValue(newWindow)) {
+            AddBrowserWindow_(newWindow);
+        }
+    });
+    baseLayout_->addWidget(newBrowserWindow);
+    setWindowTitle("CuprumBrowserQt - " + newBrowserWindow->title());
+    urlEdit_->setText(newBrowserWindow->url().toString());
+    urlEdit_->setCursorPosition(0);
+
+    topBrowserWindow_ = newBrowserWindow;
 }
 
 void MainWindow::LoadUrl_(const QString &url)
 {
     if (topBrowserWindow_ != nullptr) {
-        QString currentUrl = url;
-        if (!currentUrl.contains("http://") && !currentUrl.contains("https://") && 
-            !currentUrl.contains("cu://") && !currentUrl.contains("file:///")) {
-            currentUrl = "http://" + currentUrl;
-        }
-        topBrowserWindow_->load(QUrl(currentUrl));
+        QUrl browserUrl(url);
+        if (!urlMatcher_.match(url.toStdString())) {
+            browserUrl = QString("http://") + url;
+        } 
+        topBrowserWindow_->setUrl(browserUrl);
     }
 }
 
@@ -483,7 +393,7 @@ void MainWindow::GoForward_()
     }
 }
 
-void MainWindow::Reflash_()
+void MainWindow::Refresh_()
 {
     if (topBrowserWindow_ != nullptr) {
         topBrowserWindow_->reload();
@@ -493,7 +403,7 @@ void MainWindow::Reflash_()
 void MainWindow::SetPageZoomIn_()
 {
     if (topBrowserWindow_ != nullptr) {
-        const auto &zoomFactor = topBrowserWindow_->zoomFactor();
+        auto zoomFactor = topBrowserWindow_->zoomFactor();
         if (zoomFactor < 2.0) {
             topBrowserWindow_->setZoomFactor(zoomFactor + 0.1);
         }
@@ -503,7 +413,7 @@ void MainWindow::SetPageZoomIn_()
 void MainWindow::SetPageZoomOut_()
 {
     if (topBrowserWindow_ != nullptr) {
-        const auto &zoomFactor = topBrowserWindow_->zoomFactor();
+        auto zoomFactor = topBrowserWindow_->zoomFactor();
         if (zoomFactor > 0.5) {
             topBrowserWindow_->setZoomFactor(zoomFactor - 0.1);
         }
@@ -520,7 +430,7 @@ void MainWindow::ResetPageZoom_()
 void MainWindow::OpenDevTool_()
 {
     if (topBrowserWindow_ != nullptr) {
-        CuWebView* devToolView = new CuWebView(this, browserProfile_);
+        auto devToolView = new CuWebView(baseWidget_);
         topBrowserWindow_->page()->triggerAction(QWebEnginePage::InspectElement);
         topBrowserWindow_->page()->setDevToolsPage(devToolView->page());
         AddBrowserWindow_(devToolView);
@@ -530,95 +440,110 @@ void MainWindow::OpenDevTool_()
 void MainWindow::AddBookmark_()
 {
     if (topBrowserWindow_ != nullptr) {
-        JsonObject bookmarksJson{};
-        {
-            QFile bookmarksFile = QFile(path_ + "\\bookmarks.json");
-            if (bookmarksFile.exists()) {
-                bookmarksFile.open(QIODevice::ReadOnly);
-                bookmarksJson = JsonObject(bookmarksFile.readAll().toStdString());
-            }
-            bookmarksFile.close();
-        }
-        std::vector<JsonObject> bookmarksList{};
-        if (bookmarksJson.Contains("bookmarksList")) {
-            bookmarksList = bookmarksJson.GetArrayJson("bookmarksList");
-        }
-        {
-            JsonObject bookmark{};
-            bookmark.PutValueString("id", std::to_string(GetTimeStampMs()));
-            bookmark.PutValueString("title", topBrowserWindow_->title().toStdString());
-            bookmark.PutValueString("url", topBrowserWindow_->url().toString().toStdString());
-            bookmarksList.emplace_back(bookmark);
-        }
-        bookmarksJson.PutArrayJson("bookmarksList", bookmarksList);
-        {
-            QFile bookmarksFile = QFile(path_ + "\\bookmarks.json");
-            bookmarksFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-            bookmarksFile.write(bookmarksJson.PrintToString(false).c_str());
-            bookmarksFile.close();
-        }
+        BookmarkProvider::AddBookmark(topBrowserWindow_->url(), topBrowserWindow_->title());
     }
 }
 
-void MainWindow::Browser_onUrlChanged(const QUrl &url)
+void MainWindow::ChangeTopWindow_(CuTabButton* tabButton)
 {
-    urlEdit_->setText(url.toString());
+    auto newTopWindow = buttonWindowPairs_.atKey(tabButton);
+    if (newTopWindow == topBrowserWindow_) {
+        return;
+    }
+
+    if (topBrowserWindow_ != nullptr) {
+        topBrowserWindow_->setEnabled(false);
+        topBrowserWindow_->setVisible(false);
+        buttonWindowPairs_(topBrowserWindow_)->setFocus(false);
+    }
+    newTopWindow->setEnabled(true);
+    newTopWindow->setVisible(true);
+
+    setWindowTitle("CuprumBrowserQt - " + newTopWindow->title());
+    urlEdit_->setText(newTopWindow->url().toString());
     urlEdit_->setCursorPosition(0);
+    tabButton->setIcon(newTopWindow->icon());
+    tabButton->setText(newTopWindow->title());
+    tabButton->setFocus(true);
+    topBrowserWindow_ = newTopWindow;
 }
 
-void MainWindow::Browser_onTitleChanged(const QString &title)
+void MainWindow::RemoveBrowserWindow_(CuTabButton* tabButton)
 {
-    this->setWindowTitle("CuprumBrowserQt - " + title);
-    if (topBrowserWindow_ != nullptr) {
-        windowToButton_.at(topBrowserWindow_)->setText(title);
+    auto removeWindow = buttonWindowPairs_.atKey(tabButton);
+    if (buttonWindowPairs_.size() == 1) {
+        close();
+        return;
     }
-}
 
-void MainWindow::Browser_onIconChanged(const QIcon &icon)
-{
-    if (topBrowserWindow_ != nullptr) {
-        windowToButton_.at(topBrowserWindow_)->setIcon(icon);
+    buttonWindowPairs_.removeKey(tabButton);
+    if (removeWindow == topBrowserWindow_) {
+        auto newTopWindow = buttonWindowPairs_.back().second;
+        newTopWindow->setEnabled(true);
+        newTopWindow->setVisible(true);
+        buttonWindowPairs_(newTopWindow)->setIcon(newTopWindow->icon());
+        buttonWindowPairs_(newTopWindow)->setText(newTopWindow->title());
+        buttonWindowPairs_(newTopWindow)->setFocus(true);
+        setWindowTitle("CuprumBrowserQt - " + newTopWindow->title());
+        urlEdit_->setText(newTopWindow->url().toString());
+        urlEdit_->setCursorPosition(0);
+        topBrowserWindow_ = newTopWindow;
     }
+
+    baseLayout_->removeWidget(removeWindow);
+    removeWindow->close();
+    removeWindow->deleteLater();
+
+    browserTabLayout_->removeWidget(tabButton);
+    disconnect(tabButton, &CuTabButton::onClick, this, &MainWindow::ChangeTopWindow_);
+    disconnect(tabButton, &CuTabButton::onCommandClose, this, &MainWindow::RemoveBrowserWindow_);
+    tabButton->deleteLater();
 }
 
-void MainWindow::Browser_onNewWindowCreated(CuWebView* newBrowserWindow)
+void MainWindow::onDownloadRequested_(QWebEngineDownloadRequest* request)
 {
-    if (windowToButton_.count(newBrowserWindow) == 0) {
-        AddBrowserWindow_(newBrowserWindow);
-    }
-}
-
-void MainWindow::Browser_onDownloadRequested(QWebEngineDownloadRequest* request)
-{
-    if (QMessageBox::question(this, "获取到下载请求", "确定要下载 " + request->suggestedFileName() + " 文件吗?",
-        QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
-        QString downloadPath = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
-        downloadPath = QFileDialog::getExistingDirectory(this, "选择下载目录", downloadPath, QFileDialog::ShowDirsOnly);
+    if (QMessageBox::question(nullptr, "获取到下载请求", QString("确定要下载 ") + request->suggestedFileName() + " 文件吗?",
+                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes) {
+        auto downloadPath = CuWebView::GetWebEngineProfile_()->downloadPath();
+        downloadPath = QFileDialog::getExistingDirectory(nullptr, "选择下载目录", downloadPath, QFileDialog::ShowDirsOnly);
         request->setDownloadDirectory(downloadPath);
-        QProgressDialog* downloadProgressDialog = new QProgressDialog("文件下载中", "取消", 0, request->totalBytes(), this);
+        int totalMegaBytes = static_cast<int>(request->totalBytes() / 1024 / 1024);
+        auto downloadProgressDialog = new QProgressDialog("文件开始下载", "取消", 0, totalMegaBytes, nullptr);
         downloadProgressDialog->setWindowModality(Qt::NonModal);
         downloadProgressDialog->setAutoClose(true);
         downloadProgressDialog->setAutoReset(false);
         downloadProgressDialog->setValue(0);
-        downloadProgressDialog->setFixedSize(300, 120);
+        downloadProgressDialog->setFixedSize(360, 120);
         downloadProgressDialog->show();
-        QObject::connect(request, &QWebEngineDownloadRequest::receivedBytesChanged, this, [=](){
-            downloadProgressDialog->setValue(request->receivedBytes());
-            if (downloadProgressDialog->wasCanceled()) {
-                request->cancel();
-                downloadProgressDialog->close();
-                downloadProgressDialog->deleteLater();
-            }
+        connect(request, &QWebEngineDownloadRequest::receivedBytesChanged, this,
+                [this, request, downloadProgressDialog, totalMegaBytes]() {
+                    int receivedMegaBytes = static_cast<int>(request->receivedBytes() / 1024 / 1024);
+                    QString labelText(StrMerge("文件下载中, 已下载的数据: %d/%d MB", receivedMegaBytes, totalMegaBytes).c_str());
+                    downloadProgressDialog->setLabelText(labelText);
+                    downloadProgressDialog->setValue(receivedMegaBytes);
+                    if (downloadProgressDialog->wasCanceled()) {
+                        request->cancel();
+                        downloadProgressDialog->close();
+                        downloadProgressDialog->deleteLater();
+                    }
         });
-        QObject::connect(request, &QWebEngineDownloadRequest::isFinishedChanged, this, [=](){
+        connect(request, &QWebEngineDownloadRequest::isFinishedChanged, this, [this, request, downloadProgressDialog]() {
             if (request->state() == QWebEngineDownloadRequest::DownloadCompleted) {
                 downloadProgressDialog->close();
                 downloadProgressDialog->deleteLater();
-                QMessageBox::information(this, "下载完成", "文件已经下载到: " + downloadPath);
+                QMessageBox::information(nullptr, "下载完成", "文件已经下载到指定目录");
             }
         });
         request->accept();
     } else {
         request->cancel();
+    }
+}
+
+void MainWindow::FindPageText_()
+{
+    auto text = QInputDialog::getText(nullptr, "查找页面内容", "关键字:", QLineEdit::Normal);
+    if (topBrowserWindow_ != nullptr) {
+        topBrowserWindow_->findText(text, QWebEnginePage::FindFlag::FindCaseSensitively);
     }
 }

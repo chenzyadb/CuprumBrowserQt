@@ -1,23 +1,27 @@
 #pragma once
 
-#include <QObject>
-#include <QWidget>
-#include <QPushButton>
-#include <QMouseEvent>
+#include "utils/qt_misc.h"
 
-class CuTabButton : public QPushButton
+class CuTabButton : public QFrame
 {
     Q_OBJECT
     public:
         explicit CuTabButton(QWidget* parent);
         ~CuTabButton();
-        void SetFocused(bool focused);
+        void setFocus(bool focused);
+        void setIcon(const QIcon &icon);
+        void setText(const QString &text);
 
     signals:
-        void MouseLeftButtonClicked(CuTabButton* tabButton);
-        void MouseRightButtonClicked(CuTabButton* tabButton);
+        void onClick(CuTabButton* tabButton);
+        void onCommandClose(CuTabButton* tabButton);
 
     protected:
         void mousePressEvent(QMouseEvent* event) override;
 
+    private:
+        QHBoxLayout* buttonLayout_;
+        QLabel* buttonIcon_;
+        QLabel* buttonLabel_;
+        QPushButton* buttonClose_;
 };

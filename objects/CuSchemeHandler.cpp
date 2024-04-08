@@ -1,35 +1,50 @@
-#include "objects/CuSchemeHandler.h"
+#include "CuSchemeHandler.h"
 
 constexpr char bookmarkTemplate[] =
-    "<div class=\"bookmark-item-container\">                                                                      "
-    "   <p class=\"item-name\" onclick=\"window.location.href='{{ BOOKMARK_URL }}'\">{{ BOOKMARK_TITLE }}</p>     "
-    "   <button class=\"item-delete-button\" onclick=\"window.location.href='{{ DELETE_URL }}'; return false;\">  "
-    "       <span>删除</span>                                                                                      "
-    "   </button>                                                                                                 "
-    "</div>                                                                                                       ";
+    "<div class=\"bookmark-item-container\">                                                                         "
+    "   <p class=\"item-name\" onclick=\"window.location.href=\'{{ BOOKMARK_URL }}\'\">{{ BOOKMARK_TITLE }}</p>      "
+    "   <button class=\"item-delete-button\" onclick=\"window.location.href=\'{{ DELETE_URL }}\'; return false;\">   "
+    "       <span>删除</span>                                                                                         "
+    "   </button>                                                                                                    "
+    "</div>                                                                                                          ";
 
-CuSchemeHandler::CuSchemeHandler(const QString &path) : QWebEngineUrlSchemeHandler(), path_(path) { }
+constexpr char historyItemTemplate[] =
+    "<div class=\"history-item-container\">                                                                          "
+    "   <p class=\"item-name\" onclick=\"window.location.href=\'{{ HISTORY_URL }}\'\">{{ HISTORY_TITLE }}</p>        "
+    "   <p class=\"item-time\">{{ HISTORY_TIME }}</p>                                                                "
+    "</div>                                                                                                          ";
+
+CuSchemeHandler::CuSchemeHandler(QObject* parent) : QWebEngineUrlSchemeHandler(parent) { }
 
 CuSchemeHandler::~CuSchemeHandler() { }
 
 void CuSchemeHandler::requestStarted(QWebEngineUrlRequestJob *job)
 {
-    const auto &requestUrl = job->requestUrl().toString();
+    auto requestUrl = job->requestUrl().toString().toStdString();
     if (requestUrl == "cu://home/") {
-        job->reply("text/html", new QFile(":/res/html/homepage.html"));
-    } else if (requestUrl == "cu://about/") {
-        job->reply("text/html", new QFile(":/res/html/aboutpage.html"));
+        job->reply("text/html", new QFile(":/res/html/homepage.html", job));
     } else if (requestUrl == "cu://image/background.jpg") {
-        job->reply("image/jpg", new QFile(":/res/media/background.jpg"));
+        job->reply("image/jpg", new QFile(":/res/media/background.jpg", job));
     } else if (requestUrl == "cu://image/cu_icon.png") {
-        job->reply("image/png", new QFile(":/res/media/cu_icon.png"));
+        job->reply("image/png", new QFile(":/res/media/cu_icon.png", job));
+    } else if (requestUrl == "cu://about/") {
+        auto webPageFile = new QBuffer(job);
+        webPageFile->setData(GetAboutHtml_().toUtf8());
+        job->reply("text/html", webPageFile);
     } else if (requestUrl == "cu://bookmarks/") {
-        QString htmlText = GetBookmarkHtml_();
-        job->reply("text/html", new QBuffer(new QByteArray(htmlText.toUtf8()), job));
-    } else if (requestUrl.contains("cu://bookmarks/delete=")) {
-        QString deleteBookmarkId = GetRePostStringQt(requestUrl, '=');
-        DeleteBookmark_(deleteBookmarkId);
+        auto webPageFile = new QBuffer(job);
+        webPageFile->setData(GetBookmarkHtml_().toUtf8());
+        job->reply("text/html", webPageFile);
+    } else if (requestUrl == "cu://history/") {
+        auto webPageFile = new QBuffer(job);
+        webPageFile->setData(GetHistoryHtml_().toUtf8());
+        job->reply("text/html", webPageFile);
+    } else if (StrContains(requestUrl, "cu://bookmarks/delete=")) {
+        DeleteBookmark_(GetRePostString(requestUrl, "="));
         job->redirect(QUrl("cu://bookmarks/"));
+    } else if (requestUrl == "cu://history/clear") {
+        HistoryProvider::ClearHistory();
+        job->redirect(QUrl("cu://history/"));
     } else {
         job->fail(QWebEngineUrlRequestJob::UrlInvalid);
     }
@@ -37,68 +52,78 @@ void CuSchemeHandler::requestStarted(QWebEngineUrlRequestJob *job)
 
 QString CuSchemeHandler::GetBookmarkHtml_()
 {
-    QString htmlText = "";
+    QString htmlText{};
     {
-        QFile templateHtml = QFile(":/res/html/template_bookmarks.html");
+        QFile templateHtml(":/res/html/template_bookmarks.html");
         templateHtml.open(QIODevice::ReadOnly);
         htmlText = templateHtml.readAll();
         templateHtml.close();
     }
     {
-        JsonObject bookmarksJson{};
-        {
-            QFile bookmarksFile = QFile(path_ + "\\bookmarks.json");
-            if (bookmarksFile.exists()) {
-                bookmarksFile.open(QIODevice::ReadOnly);
-                bookmarksJson = JsonObject(bookmarksFile.readAll().toStdString());
-                bookmarksFile.close();
-            }
-        }
-        QString bookmarksData = "";
-        if (bookmarksJson.Contains("bookmarksList")) {
-            const auto &bookmarksList = bookmarksJson.GetArrayJson("bookmarksList");
-            for (const auto &bookmark : bookmarksList) {
-                const QString &id = bookmark.GetValueString("id").c_str();
-                const QString &title = bookmark.GetValueString("title").c_str();
-                const QString &url = bookmark.GetValueString("url").c_str();
-                const QString &bookmarkText = QString(bookmarkTemplate)
-                                                  .replace("{{ BOOKMARK_TITLE }}", title)
-                                                  .replace("{{ BOOKMARK_URL }}", url)
-                                                  .replace("{{ DELETE_URL }}", "cu://bookmarks/delete=" + id);
+        QString bookmarksData{};
+        auto bookmarks = BookmarkProvider::GetBookmarks();
+        if (bookmarks.size() > 0) {
+            for (const auto &bookmark : bookmarks) {
+                auto deleteUrl = QString("cu://bookmarks/delete=") + bookmark.id;
+                auto bookmarkText = QString(bookmarkTemplate)
+                                        .replace("{{ BOOKMARK_TITLE }}", bookmark.title)
+                                        .replace("{{ BOOKMARK_URL }}", bookmark.url)
+                                        .replace("{{ DELETE_URL }}", deleteUrl);
                 bookmarksData += bookmarkText;
             }
+        } else {
+            bookmarksData = "<p>本来无一物, 何处惹尘埃.</p>";
         }
         htmlText.replace("{% BOOKMARKS_DATA %}", bookmarksData);
     }
-
     return htmlText;
 }
 
-void CuSchemeHandler::DeleteBookmark_(const QString &id)
+void CuSchemeHandler::DeleteBookmark_(const std::string &id)
 {
-    JsonObject bookmarksJson{};
+    BookmarkProvider::RemoveBookmark(id);
+}
+
+QString CuSchemeHandler::GetAboutHtml_()
+{
+    QString htmlText{};
     {
-        QFile bookmarksFile = QFile(path_ + "\\bookmarks.json");
-        if (!bookmarksFile.exists()) {
-            return;
-        }
-        bookmarksFile.open(QIODevice::ReadOnly);
-        bookmarksJson = JsonObject(bookmarksFile.readAll().toStdString());
-        bookmarksFile.close();
+        QFile templateHtml(":/res/html/aboutpage.html");
+        templateHtml.open(QIODevice::ReadOnly);
+        htmlText = templateHtml.readAll();
+        templateHtml.close();
     }
-    auto bookmarksList = bookmarksJson.GetArrayJson("bookmarksList");
-    for (const auto &bookmark : bookmarksList) {
-        if (bookmark.GetValueString("id") == id.toStdString()) {
-            const auto &iter = std::find(bookmarksList.begin(), bookmarksList.end(), bookmark);
-            bookmarksList.erase(iter);
-            break;
-        }
-    }
-    bookmarksJson.PutArrayJson("bookmarksList", bookmarksList);
     {
-        QFile bookmarksFile = QFile(path_ + "\\bookmarks.json");
-        bookmarksFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        bookmarksFile.write(bookmarksJson.PrintToString(false).c_str());
-        bookmarksFile.close();
+        QString browserVersion(StrMerge("V1 (%d)", GetCompileDateCode()).c_str());
+        QString chromiumVersion(qWebEngineChromiumVersion());
+        htmlText = htmlText.replace("{{ BROWSER_VER }}", browserVersion).replace("{{ CHROMIUM_VER }}", chromiumVersion);
     }
+    return htmlText;
+}
+
+QString CuSchemeHandler::GetHistoryHtml_()
+{
+    QString htmlText{};
+    {
+        QFile templateHtml(":/res/html/template_history.html");
+        templateHtml.open(QIODevice::ReadOnly);
+        htmlText = templateHtml.readAll();
+        templateHtml.close();
+    }
+    {
+        QString historyData{};
+        auto historyItems = HistoryProvider::GetHistoryItems();
+        if (historyItems.size() > 0) {
+            for (const auto &item : historyItems) {
+                historyData += QString(historyItemTemplate)
+                                   .replace("{{ HISTORY_URL }}", item.url)
+                                   .replace("{{ HISTORY_TITLE }}", item.title)
+                                   .replace("{{ HISTORY_TIME }}", item.time);
+            }
+        } else {
+            historyData = "<p>本来无一物, 何处惹尘埃.</p>";
+        }
+        htmlText = htmlText.replace("{% HISTORY_DATA %}", historyData);
+    }
+    return htmlText;
 }

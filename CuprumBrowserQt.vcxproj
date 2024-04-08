@@ -14,7 +14,7 @@
     <ProjectGuid>{1EB8F2E9-F4BD-38FC-BF05-0C2965FB15BD}</ProjectGuid>
     <RootNamespace>CuprumBrowserQt</RootNamespace>
     <Keyword>QtVS_v304</Keyword>
-    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.22621.0</WindowsTargetPlatformMinVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' or !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
@@ -66,11 +66,12 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <QtInstall>6.4.3</QtInstall>
+    <QtInstall>6.5.3_msvc2019_64</QtInstall>
     <QtModules>core;gui;network;qml;quick;widgets;opengl;printsupport;webchannel;webenginecore;positioning;webenginewidgets;webenginequick</QtModules>
+    <QtPlugin>false</QtPlugin>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <QtInstall>6.4.3</QtInstall>
+    <QtInstall>6.5.3_msvc2019_64</QtInstall>
     <QtModules>core;gui;network;qml;quick;widgets;opengl;printsupport;webchannel;webenginecore;positioning;webenginewidgets;webenginequick</QtModules>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
@@ -202,27 +203,29 @@
     </QtRcc>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="utils\CuLogger.cpp" />
+    <ClCompile Include="utils\CuJSONObject.cpp" />
     <ClCompile Include="objects\CuSchemeHandler.cpp" />
     <ClCompile Include="widgets\CuTabButton.cpp" />
     <ClCompile Include="widgets\CuWebView.cpp" />
-    <ClCompile Include="utils\JsonObject.cpp" />
     <ClCompile Include="windows\MainWindow.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="utils\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="utils\CuJSONObject.h" />
     <ClInclude Include="utils\CuLogger.h" />
+    <ClInclude Include="utils\CuPairList.h" />
+    <ClInclude Include="utils\qt_misc.h" />
     <QtMoc Include="objects\CuSchemeHandler.h">
     </QtMoc>
     <QtMoc Include="widgets\CuTabButton.h">
     </QtMoc>
     <QtMoc Include="widgets\CuWebView.h">
     </QtMoc>
-    <ClInclude Include="utils\JsonObject.h" />
     <QtMoc Include="windows\MainWindow.h">
     </QtMoc>
-    <ClInclude Include="utils\utils.h" />
+    <ClInclude Include="utils\CuStringMatcher.h" />
+    <ClInclude Include="utils\libcu.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="debug\moc_predefs.h.cbt">
@@ -244,6 +247,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="html\aboutpage.html" />
+    <None Include="html\template_history.html" />
     <None Include="media\add.png" />
     <None Include="media\back.png" />
     <None Include="media\background.jpg" />
@@ -252,7 +256,7 @@
     <None Include="media\forward.png" />
     <None Include="html\homepage.html" />
     <None Include="media\menu.png" />
-    <None Include="media\reflash.png" />
+    <None Include="media\refresh.png" />
     <QtRcc Include="resources.qrc">
     </QtRcc>
     <None Include="html\template_bookmarks.html" />
