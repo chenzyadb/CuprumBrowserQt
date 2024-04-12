@@ -1,7 +1,7 @@
 #include "MainWindow.h"
 
 constexpr char windowStyle[] =
-    "QMainWindow {                                                               "
+    "MainWindow {                                                                "
     "   background-color: #FFFFFF;                                               "
     "}                                                                           "
     "QPushButton {                                                               "
@@ -36,27 +36,11 @@ constexpr char windowStyle[] =
     "}                                                                           "
     "QMenu::item:pressed {                                                       "
     "   background-color: #E0E0E0;                                               "
-    "}                                                                           "
-    "QLineEdit {                                                                 "
-    "   border: none;                                                            "
-    "   background-color: #F0F0F0;                                               "
-    "   color: #000000;                                                          "
-    "   font-size: 14px;                                                         "
-    "   border-radius: 5px;                                                      "
-    "   padding-left: 5px;                                                       "
-    "   padding-right: 5px;                                                      "
-    "}                                                                           "
-    "QLineEdit:hover {                                                           "
-    "   background-color: #E8E8E8;                                               "
-    "}                                                                           "
-    "QLineEdit:pressed {                                                         "
-    "   background-color: #E8E8E8;                                               "
     "}                                                                           ";
 
 
-MainWindow::MainWindow() :
+MainWindow::MainWindow(const QList<QString> &args) :
     QMainWindow(),
-    urlMatcher_("(http://|https://|cu://|file:///)*"),
     baseWidget_(nullptr),
     baseLayout_(nullptr),
     controlBarLayout_(nullptr),
@@ -132,14 +116,14 @@ MainWindow::MainWindow() :
         controlBarLayout_->addWidget(refreshButton_);
     }
     {
-        urlEdit_ = new QLineEdit(baseWidget_);
+        urlEdit_ = new CuUrlEdit(baseWidget_);
         urlEdit_->setMinimumHeight(30);
         urlEdit_->setMaximumHeight(30);
         urlEdit_->setContentsMargins(0, 0, 0, 0);
         urlEdit_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
         urlEdit_->setToolTip("Enter your url.");
         connect(urlEdit_, &QLineEdit::returnPressed, this, [this]() {
-            LoadUrl_(urlEdit_->text());
+            LoadUrl_(QUrl::fromUserInput(urlEdit_->text()));
         });
         controlBarLayout_->addWidget(urlEdit_);
     }
@@ -168,7 +152,7 @@ MainWindow::MainWindow() :
         addButton_->setToolTip("Add Tab.");
         connect(addButton_, &QPushButton::clicked, this, [this]() {
             AddBrowserWindow_(new CuWebView(baseWidget_));
-            LoadUrl_("cu://home/");
+            LoadUrl_(QUrl("cu://home/"));
         });
         browserTabLayout_->addWidget(addButton_);
     }
@@ -181,7 +165,7 @@ MainWindow::MainWindow() :
             addTap->setText("添加标签页");
             connect(addTap, &QAction::triggered, this, [this]() {
                 AddBrowserWindow_(new CuWebView(baseWidget_));
-                LoadUrl_("cu://home/");
+                LoadUrl_(QUrl("cu://home/"));
             });
             browserMenu_->addAction(addTap);
         }
@@ -200,7 +184,7 @@ MainWindow::MainWindow() :
             openHomePage->setShortcut(QKeySequence("Ctrl+H"));
             openHomePage->setText("打开首页");
             connect(openHomePage, &QAction::triggered, this, [this](){
-                LoadUrl_("cu://home/");
+                LoadUrl_(QUrl("cu://home/"));
             });
             browserMenu_->addAction(openHomePage);
         }
@@ -209,7 +193,7 @@ MainWindow::MainWindow() :
             openBookmark->setShortcut(QKeySequence("Ctrl+B"));
             openBookmark->setText("打开书签页");
             connect(openBookmark, &QAction::triggered, this, [this](){
-                LoadUrl_("cu://bookmarks/");
+                LoadUrl_(QUrl("cu://bookmarks/"));
             });
             browserMenu_->addAction(openBookmark);
         }
@@ -218,7 +202,7 @@ MainWindow::MainWindow() :
             openHistory->setShortcut(QKeySequence("Ctrl+J"));
             openHistory->setText("打开历史记录");
             connect(openHistory, &QAction::triggered, this, [this]() {
-                LoadUrl_("cu://history/");
+                LoadUrl_(QUrl("cu://history/"));
             });
             browserMenu_->addAction(openHistory);
         }
@@ -267,6 +251,13 @@ MainWindow::MainWindow() :
             browserMenu_->addAction(resetZoom);
         }
         {
+            auto printToPdf = new QAction(browserMenu_);
+            printToPdf->setShortcut(QKeySequence("Ctrl+P"));
+            printToPdf->setText("打印网页为PDF");
+            connect(printToPdf, &QAction::triggered, this, &MainWindow::PrintPageToPdf_);
+            browserMenu_->addAction(printToPdf);
+        }
+        {
             auto openDevTool = new QAction(browserMenu_);
             openDevTool->setShortcut(QKeySequence("F12"));
             openDevTool->setText("打开开发人员工具");
@@ -279,14 +270,16 @@ MainWindow::MainWindow() :
         {
             auto aboutQt = new QAction(browserMenu_);
             aboutQt->setText("关于Qt");
-            connect(aboutQt, &QAction::triggered, this, &QApplication::aboutQt);
+            connect(aboutQt, &QAction::triggered, this, []() { 
+                QApplication::aboutQt();
+            });
             browserMenu_->addAction(aboutQt);
         }
         {
             auto aboutBrowser = new QAction(browserMenu_);
             aboutBrowser->setText("关于浏览器");
             connect(aboutBrowser, &QAction::triggered, this, [this]() {
-                LoadUrl_("cu://about/");
+                LoadUrl_(QUrl("cu://about/"));
             });
             browserMenu_->addAction(aboutBrowser);
         }
@@ -304,7 +297,11 @@ MainWindow::MainWindow() :
     {
         connect(CuWebView::GetWebEngineProfile_(), &QWebEngineProfile::downloadRequested, this, &MainWindow::onDownloadRequested_);
         AddBrowserWindow_(new CuWebView(baseWidget_));
-        LoadUrl_("cu://home/");
+        if (args.size() > 1) {
+            LoadUrl_(QUrl::fromUserInput(args[1]));
+        } else {
+            LoadUrl_(QUrl("cu://home/"));
+        }
     }
 }
 
@@ -368,14 +365,10 @@ void MainWindow::AddBrowserWindow_(CuWebView* newBrowserWindow)
     topBrowserWindow_ = newBrowserWindow;
 }
 
-void MainWindow::LoadUrl_(const QString &url)
+void MainWindow::LoadUrl_(const QUrl &url)
 {
     if (topBrowserWindow_ != nullptr) {
-        QUrl browserUrl(url);
-        if (!urlMatcher_.match(url.toStdString())) {
-            browserUrl = QString("http://") + url;
-        } 
-        topBrowserWindow_->setUrl(browserUrl);
+        topBrowserWindow_->setUrl(url);
     }
 }
 
@@ -481,9 +474,10 @@ void MainWindow::RemoveBrowserWindow_(CuTabButton* tabButton)
         auto newTopWindow = buttonWindowPairs_.back().second;
         newTopWindow->setEnabled(true);
         newTopWindow->setVisible(true);
-        buttonWindowPairs_(newTopWindow)->setIcon(newTopWindow->icon());
-        buttonWindowPairs_(newTopWindow)->setText(newTopWindow->title());
-        buttonWindowPairs_(newTopWindow)->setFocus(true);
+        auto newTabButton = buttonWindowPairs_(newTopWindow);
+        newTabButton->setIcon(newTopWindow->icon());
+        newTabButton->setText(newTopWindow->title());
+        newTabButton->setFocus(true);
         setWindowTitle("CuprumBrowserQt - " + newTopWindow->title());
         urlEdit_->setText(newTopWindow->url().toString());
         urlEdit_->setCursorPosition(0);
@@ -545,5 +539,15 @@ void MainWindow::FindPageText_()
     auto text = QInputDialog::getText(nullptr, "查找页面内容", "关键字:", QLineEdit::Normal);
     if (topBrowserWindow_ != nullptr) {
         topBrowserWindow_->findText(text, QWebEnginePage::FindFlag::FindCaseSensitively);
+    }
+}
+
+void MainWindow::PrintPageToPdf_()
+{
+    if (topBrowserWindow_ != nullptr) {
+        auto documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+        auto downloadPath = documentsPath + "/" + topBrowserWindow_->title() + ".pdf";
+        downloadPath = QFileDialog::getSaveFileName(nullptr, "保存至", downloadPath, ".pdf");
+        topBrowserWindow_->printToPdf(downloadPath);
     }
 }

@@ -206,16 +206,19 @@
     <ClCompile Include="utils\CuJSONObject.cpp" />
     <ClCompile Include="objects\CuSchemeHandler.cpp" />
     <ClCompile Include="widgets\CuTabButton.cpp" />
+    <ClCompile Include="widgets\CuUrlEdit.cpp" />
     <ClCompile Include="widgets\CuWebView.cpp" />
     <ClCompile Include="windows\MainWindow.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="utils\browser_misc.h" />
     <ClInclude Include="utils\CuJSONObject.h" />
     <ClInclude Include="utils\CuLogger.h" />
     <ClInclude Include="utils\CuPairList.h" />
     <ClInclude Include="utils\qt_misc.h" />
+    <QtMoc Include="widgets\CuUrlEdit.h" />
     <QtMoc Include="objects\CuSchemeHandler.h">
     </QtMoc>
     <QtMoc Include="widgets\CuTabButton.h">

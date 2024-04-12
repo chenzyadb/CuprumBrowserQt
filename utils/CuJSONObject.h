@@ -151,6 +151,7 @@ namespace CU
 			ItemValue value() const;
 			void clear();
 			size_t size() const;
+			size_t hash() const;
 
 			bool toBoolean() const;
 			int toInt() const;
@@ -212,6 +213,7 @@ namespace CU
 			void resize(const size_t &new_size);
 			void clear();
 			size_t size() const;
+			size_t hash() const;
 			bool empty() const;
 			std::vector<JSONItem> data() const;
 			std::string toString() const;
@@ -251,6 +253,7 @@ namespace CU
 			void remove(const std::string &key);
 			void clear();
 			size_t size() const;
+			size_t hash() const;
 			bool empty() const;
 			std::unordered_map<std::string, JSONItem> data() const;
 			std::vector<std::string> order() const;
@@ -277,16 +280,15 @@ namespace std
 	{
 		size_t operator()(const CU::JSONItem &val) const
 		{
-			return reinterpret_cast<size_t>(std::addressof(val));
+			return val.hash();
 		}
 	};
-
 	template <>
 	struct hash<CU::JSONArray>
 	{
 		size_t operator()(const CU::JSONArray &val) const
 		{
-			return reinterpret_cast<size_t>(std::addressof(val));
+			return val.hash();
 		}
 	};
 
@@ -295,7 +297,7 @@ namespace std
 	{
 		size_t operator()(const CU::JSONObject &val) const
 		{
-			return reinterpret_cast<size_t>(std::addressof(val));
+			return val.hash();
 		}
 	};
 }

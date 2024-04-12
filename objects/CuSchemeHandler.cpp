@@ -40,7 +40,7 @@ void CuSchemeHandler::requestStarted(QWebEngineUrlRequestJob *job)
         webPageFile->setData(GetHistoryHtml_().toUtf8());
         job->reply("text/html", webPageFile);
     } else if (StrContains(requestUrl, "cu://bookmarks/delete=")) {
-        DeleteBookmark_(GetRePostString(requestUrl, "="));
+        BookmarkProvider::RemoveBookmark(GetRePostString(requestUrl, "="));
         job->redirect(QUrl("cu://bookmarks/"));
     } else if (requestUrl == "cu://history/clear") {
         HistoryProvider::ClearHistory();
@@ -72,16 +72,11 @@ QString CuSchemeHandler::GetBookmarkHtml_()
                 bookmarksData += bookmarkText;
             }
         } else {
-            bookmarksData = "<p>本来无一物, 何处惹尘埃.</p>";
+            bookmarksData = "<br/><p>本来无一物, 何处惹尘埃.</p>";
         }
         htmlText.replace("{% BOOKMARKS_DATA %}", bookmarksData);
     }
     return htmlText;
-}
-
-void CuSchemeHandler::DeleteBookmark_(const std::string &id)
-{
-    BookmarkProvider::RemoveBookmark(id);
 }
 
 QString CuSchemeHandler::GetAboutHtml_()
@@ -121,7 +116,7 @@ QString CuSchemeHandler::GetHistoryHtml_()
                                    .replace("{{ HISTORY_TIME }}", item.time);
             }
         } else {
-            historyData = "<p>本来无一物, 何处惹尘埃.</p>";
+            historyData = "<br/><p>本来无一物, 何处惹尘埃.</p>";
         }
         htmlText = htmlText.replace("{% HISTORY_DATA %}", historyData);
     }

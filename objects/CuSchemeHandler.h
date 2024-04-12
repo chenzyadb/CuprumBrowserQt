@@ -1,7 +1,6 @@
 #pragma once
 
 #include "utils/qt_misc.h"
-#include "utils/CuJSONObject.h"
 #include "utils/CuLogger.h"
 #include "widgets/CuWebView.h"
 
@@ -16,7 +15,6 @@ class CuSchemeHandler : public QWebEngineUrlSchemeHandler
 
     private:
         QString GetBookmarkHtml_();
-        void DeleteBookmark_(const std::string &id);
         QString GetAboutHtml_();
         QString GetHistoryHtml_();
 };

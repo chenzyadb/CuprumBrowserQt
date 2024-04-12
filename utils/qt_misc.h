@@ -1,11 +1,13 @@
 #pragma once
 
 #include "libcu.h"
+#include <QAbstractItemView>
 #include <QAction>
 #include <QApplication>
 #include <QBuffer>
 #include <QByteArray>
 #include <QCloseEvent>
+#include <QCompleter>
 #include <QContextMenuEvent>
 #include <QCoreApplication>
 #include <QDialog>
@@ -29,6 +31,8 @@
 #include <QResizeEvent>
 #include <QStandardPaths>
 #include <QString>
+#include <QStringListModel>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWebEngineDownloadRequest>
 #include <QWebEngineFullScreenRequest>

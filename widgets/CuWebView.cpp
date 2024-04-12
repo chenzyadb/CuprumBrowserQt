@@ -48,9 +48,7 @@ QWebEngineProfile* CuWebView::GetWebEngineProfile_()
     return profile;
 }
 
-CuWebView::CuWebView(QWidget* parent) :
-    QWebEngineView(GetWebEngineProfile_(), parent),
-    parent_(parent)
+CuWebView::CuWebView(QWidget* parent) : QWebEngineView(GetWebEngineProfile_(), parent)
 {
     auto page = this->page();
     connect(page, &QWebEnginePage::fullScreenRequested, this, [](QWebEngineFullScreenRequest request) {
@@ -62,12 +60,10 @@ CuWebView::CuWebView(QWidget* parent) :
                     page->setFeaturePermission(url, feature, QWebEnginePage::PermissionGrantedByUser);
                 }
     });
-    connect(page, &QWebEnginePage::loadFinished, this, [this](bool _val) {
-        Q_UNUSED(_val);
+    connect(page, &QWebEnginePage::loadFinished, this, [this]() {
         HistoryProvider::AddHistoryItem(url(), title());
     });
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    history();
 }
 
 CuWebView::~CuWebView() { }
@@ -75,7 +71,7 @@ CuWebView::~CuWebView() { }
 CuWebView* CuWebView::createWindow(QWebEnginePage::WebWindowType type)
 {
     Q_UNUSED(type);
-    auto newBrowserWindow = new CuWebView(parent_);
+    auto newBrowserWindow = new CuWebView(parentWidget());
     emit NewWindowCreated(newBrowserWindow);
     return newBrowserWindow;
 }

@@ -251,6 +251,44 @@ size_t CU::JSONItem::size() const
 	return 1;
 }
 
+size_t CU::JSONItem::hash() const
+{
+	switch (type_) {
+		case ItemType::ITEM_NULL:
+			break;
+		case ItemType::BOOLEAN:
+			{
+				std::hash<bool> hashVal{};
+				return hashVal(std::get<bool>(value_));
+			}
+		case ItemType::INTEGER:
+			{
+				std::hash<int> hashVal{};
+				return hashVal(std::get<int>(value_));
+			}
+		case ItemType::LONG:
+			{
+				std::hash<int64_t> hashVal{};
+				return hashVal(std::get<int64_t>(value_));
+			}
+		case ItemType::DOUBLE:
+			{
+				std::hash<double> hashVal{};
+				return hashVal(std::get<double>(value_));
+			}
+		case ItemType::STRING:
+			{
+				std::hash<std::string> hashVal{};
+				return hashVal(std::get<std::string>(value_));
+			}
+		case ItemType::ARRAY:
+			return std::get<CU::JSONArray*>(value_)->hash();
+		case ItemType::OBJECT:
+			return std::get<CU::JSONObject*>(value_)->hash();
+	}
+	return 0;
+}
+
 bool CU::JSONItem::toBoolean() const
 {
 	if (type_ == ItemType::BOOLEAN) {
@@ -727,6 +765,15 @@ size_t CU::JSONArray::size() const
 	return data_.size();
 }
 
+size_t CU::JSONArray::hash() const
+{
+	size_t hashVal = data_.size();
+	for (const auto &item : data_) {
+		hashVal ^= item.hash() + 2654435769 + (hashVal << 6) + (hashVal >> 2);
+	}
+	return hashVal;
+}
+
 bool CU::JSONArray::empty() const
 {
 	return (data_.begin() == data_.end());
@@ -1104,6 +1151,15 @@ void CU::JSONObject::clear()
 size_t CU::JSONObject::size() const
 {
 	return data_.size();
+}
+
+size_t CU::JSONObject::hash() const
+{
+	size_t hashVal = data_.size();
+	for (auto iter = data_.begin(); iter != data_.end(); iter++) {
+		hashVal ^= (iter->second).hash() + 2654435769 + (hashVal << 6) + (hashVal >> 2);
+	}
+	return hashVal;
 }
 
 bool CU::JSONObject::empty() const

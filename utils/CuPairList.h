@@ -1,3 +1,6 @@
+// CuPairList by chenzyadb@github.com
+// Based on C++17 STL (MSVC)
+
 #ifndef _CU_PAIR_LIST_
 #define _CU_PAIR_LIST_
 
@@ -210,6 +213,7 @@ namespace CU
 				if (keyIter == keys_.end()) {
 					keys_.emplace_back(key);
 					values_.emplace_back();
+					return values_.back();
 				}
 				return *(values_.begin() + (keyIter - keys_.begin()));
 			}
@@ -218,8 +222,7 @@ namespace CU
 			{
 				auto valueIter = std::find(values_.begin(), values_.end(), value);
 				if (valueIter == values_.end()) {
-					values_.emplace_back(value);
-					keys_.emplace_back();
+					throw PairListExcept("Value not found");
 				}
 				return *(keys_.begin() + (valueIter - values_.begin()));
 			}

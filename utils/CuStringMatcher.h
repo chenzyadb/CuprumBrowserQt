@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <functional>
 #include <cstring>
 #include <cctype>
 
@@ -158,6 +159,12 @@ namespace CU
 					rule_ = rule;
 					UpdateRule_();
 				}
+			}
+
+			size_t hash() const
+			{
+				std::hash<std::string> hashVal{};
+				return hashVal(rule_);
 			}
 
 			void clear()
@@ -320,7 +327,7 @@ namespace std
 	{
 		size_t operator()(const CU::StringMatcher &val) const
 		{
-			return reinterpret_cast<size_t>(std::addressof(val));
+			return val.hash();
 		}
 	};
 }

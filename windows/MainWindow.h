@@ -7,24 +7,24 @@
 #include "utils/CuPairList.h"
 #include "widgets/CuWebView.h"
 #include "widgets/CuTabButton.h"
+#include "widgets/CuUrlEdit.h"
 #include "objects/CuSchemeHandler.h"
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
     public:
-        MainWindow();
+        MainWindow(const QList<QString> &args);
         ~MainWindow();
 
     protected:
         void closeEvent(QCloseEvent* event) override;
 
     private:
-        CU::StringMatcher urlMatcher_;
         QWidget* baseWidget_;
         QVBoxLayout* baseLayout_;
         QHBoxLayout* controlBarLayout_;
-        QLineEdit* urlEdit_;
+        CuUrlEdit* urlEdit_;
         QPushButton* loadButton_;
         QPushButton* backButton_;
         QPushButton* forwardButton_;
@@ -37,7 +37,7 @@ class MainWindow : public QMainWindow
         QMenu* browserMenu_;
 
         void AddBrowserWindow_(CuWebView* browserWindow);
-        void LoadUrl_(const QString &url);
+        void LoadUrl_(const QUrl &url);
         void GoBack_();
         void GoForward_();
         void Refresh_();
@@ -52,4 +52,5 @@ class MainWindow : public QMainWindow
         void RemoveBrowserWindow_(CuTabButton* tabButton);
         void onDownloadRequested_(QWebEngineDownloadRequest* request);
         void FindPageText_();
+        void PrintPageToPdf_();
 };

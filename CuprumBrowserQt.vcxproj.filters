@@ -55,6 +55,9 @@
     <ClCompile Include="utils\CuJSONObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="widgets\CuUrlEdit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils\CuLogger.h">
@@ -88,6 +91,9 @@
       <Filter>Generated Files</Filter>
     </ClInclude>
     <ClInclude Include="utils\CuPairList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\browser_misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -142,5 +148,10 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include=".\CuprumBrowserQt_resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="widgets\CuUrlEdit.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

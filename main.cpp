@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     app.setAttribute(Qt::AA_UseStyleSheetPropagationInWidgetStyles, true);
     CU::Logger::Info("Application Created.");
 
-    auto window = new MainWindow();
+    auto window = new MainWindow(app.arguments());
     window->show();
 
     int appRet = app.exec();
