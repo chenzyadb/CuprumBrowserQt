@@ -39,8 +39,8 @@ void CuSchemeHandler::requestStarted(QWebEngineUrlRequestJob *job)
         auto webPageFile = new QBuffer(job);
         webPageFile->setData(GetHistoryHtml_().toUtf8());
         job->reply("text/html", webPageFile);
-    } else if (StrContains(requestUrl, "cu://bookmarks/delete=")) {
-        BookmarkProvider::RemoveBookmark(GetRePostString(requestUrl, "="));
+    } else if (CU::StrStartsWith<char>(requestUrl, "cu://bookmarks/delete=")) {
+        BookmarkProvider::RemoveBookmark(CU::SubRePostStr(requestUrl, '='));
         job->redirect(QUrl("cu://bookmarks/"));
     } else if (requestUrl == "cu://history/clear") {
         HistoryProvider::ClearHistory();
@@ -89,7 +89,7 @@ QString CuSchemeHandler::GetAboutHtml_()
         templateHtml.close();
     }
     {
-        QString browserVersion(StrMerge("V1 (%d)", GetCompileDateCode()).c_str());
+        QString browserVersion(CU::Format("V1 ({})", CU::CompileDateCode()).c_str());
         QString chromiumVersion(qWebEngineChromiumVersion());
         htmlText = htmlText.replace("{{ BROWSER_VER }}", browserVersion).replace("{{ CHROMIUM_VER }}", chromiumVersion);
     }

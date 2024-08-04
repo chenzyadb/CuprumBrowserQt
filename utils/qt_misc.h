@@ -45,9 +45,3 @@
 #include <QWebEngineUrlSchemeHandler>
 #include <QWebEngineView>
 #include <QWidget>
-
-inline int64_t GetTimeStampMsQt()
-{
-	auto time_pt = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
-	return time_pt.time_since_epoch().count();
-}

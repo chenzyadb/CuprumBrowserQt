@@ -121,9 +121,15 @@ MainWindow::MainWindow(const QList<QString> &args) :
         urlEdit_->setMaximumHeight(30);
         urlEdit_->setContentsMargins(0, 0, 0, 0);
         urlEdit_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        urlEdit_->setToolTip("Enter your url.");
+        urlEdit_->setToolTip("Invoke search or enter a URL.");
+        urlEdit_->setPlaceholderText("Invoke search or enter a URL");
         connect(urlEdit_, &QLineEdit::returnPressed, this, [this]() {
-            LoadUrl_(QUrl::fromUserInput(urlEdit_->text()));
+            auto url = QUrl::fromUserInput(urlEdit_->text());
+            if (url.isValid() && url.toString().contains('.')) {
+                LoadUrl_(url);
+            } else {
+                LoadUrl_(QUrl::fromUserInput(QString("https://www.baidu.com/s?wd=") + urlEdit_->text()));
+            }
         });
         controlBarLayout_->addWidget(urlEdit_);
     }
@@ -512,8 +518,8 @@ void MainWindow::onDownloadRequested_(QWebEngineDownloadRequest* request)
         connect(request, &QWebEngineDownloadRequest::receivedBytesChanged, this,
                 [this, request, downloadProgressDialog, totalMegaBytes]() {
                     int receivedMegaBytes = static_cast<int>(request->receivedBytes() / 1024 / 1024);
-                    QString labelText(StrMerge("文件下载中, 已下载的数据: %d/%d MB", receivedMegaBytes, totalMegaBytes).c_str());
-                    downloadProgressDialog->setLabelText(labelText);
+                    auto labelText = CU::Format("文件下载中, 已下载的数据: {}/{} MB.", receivedMegaBytes, totalMegaBytes);
+                    downloadProgressDialog->setLabelText(labelText.c_str());
                     downloadProgressDialog->setValue(receivedMegaBytes);
                     if (downloadProgressDialog->wasCanceled()) {
                         request->cancel();

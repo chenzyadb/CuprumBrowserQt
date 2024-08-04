@@ -1,14 +1,18 @@
 #include "CuWebView.h"
 
+constexpr char userAgent[] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/[CHROME_VER] Safari/537.36";
+
 QWebEngineProfile* CuWebView::GetWebEngineProfile_()
 {
     static QWebEngineProfile* profile = nullptr;
     if (profile == nullptr) {
+        auto browserUserAgent = QString(userAgent).replace("[CHROME_VER]", qWebEngineChromiumVersion());
         profile = new QWebEngineProfile("CuprumBrowserQt");
         profile->setPersistentStoragePath(QCoreApplication::applicationDirPath() + "\\browser_storage");
         profile->setDownloadPath(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation));
         profile->setPersistentCookiesPolicy(QWebEngineProfile::AllowPersistentCookies);
         profile->setHttpCacheType(QWebEngineProfile::MemoryHttpCache);
+        profile->setHttpUserAgent(browserUserAgent);
         profile->installUrlSchemeHandler("cu", new CuSchemeHandler(profile));
         auto settings = profile->settings();
         settings->setAttribute(QWebEngineSettings::AutoLoadImages, true);
@@ -24,10 +28,10 @@ QWebEngineProfile* CuWebView::GetWebEngineProfile_()
         settings->setAttribute(QWebEngineSettings::HyperlinkAuditingEnabled, true);
         settings->setAttribute(QWebEngineSettings::ScrollAnimatorEnabled, true);
         settings->setAttribute(QWebEngineSettings::ErrorPageEnabled, true);
-        settings->setAttribute(QWebEngineSettings::PluginsEnabled, true);
+        settings->setAttribute(QWebEngineSettings::PluginsEnabled, false);
         settings->setAttribute(QWebEngineSettings::FullScreenSupportEnabled, true);
         settings->setAttribute(QWebEngineSettings::ScreenCaptureEnabled, true);
-        settings->setAttribute(QWebEngineSettings::WebGLEnabled, true);
+        settings->setAttribute(QWebEngineSettings::WebGLEnabled, false);
         settings->setAttribute(QWebEngineSettings::Accelerated2dCanvasEnabled, true);
         settings->setAttribute(QWebEngineSettings::AutoLoadIconsForPage, true);
         settings->setAttribute(QWebEngineSettings::TouchIconsEnabled, true);
@@ -53,12 +57,6 @@ CuWebView::CuWebView(QWidget* parent) : QWebEngineView(GetWebEngineProfile_(), p
     auto page = this->page();
     connect(page, &QWebEnginePage::fullScreenRequested, this, [](QWebEngineFullScreenRequest request) {
         request.accept();
-    });
-    connect(page, &QWebEnginePage::featurePermissionRequested,
-            [page](const QUrl &url, QWebEnginePage::Feature feature) {
-                if (feature == QWebEnginePage::Feature::MouseLock) {
-                    page->setFeaturePermission(url, feature, QWebEnginePage::PermissionGrantedByUser);
-                }
     });
     connect(page, &QWebEnginePage::loadFinished, this, [this]() {
         HistoryProvider::AddHistoryItem(url(), title());

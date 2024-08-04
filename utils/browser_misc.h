@@ -21,7 +21,7 @@ class BookmarkProvider
                 bookmarksArray = bookmarksJSON.at("bookmarksList").toArray();
             }
             CU::JSONObject bookmark{};
-            bookmark["id"] = std::to_string(GetTimeStampMsQt());
+            bookmark["id"] = std::to_string(CU::TimeStamp());
             bookmark["url"] = url.toString().toStdString();
             bookmark["title"] = title.toStdString();
             bookmarksArray.add(bookmark);
@@ -65,7 +65,7 @@ class BookmarkProvider
         static void SaveToDisk()
         {
             const auto &bookmarksJSON = GetInstance_()->bookmarksJSON_;
-            QFile bookmarksFile(QApplication::applicationDirPath() + "\\bookmarks.json");
+            QFile bookmarksFile(QApplication::applicationDirPath() + "/bookmarks.json");
             bookmarksFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
             bookmarksFile.write(bookmarksJSON.toString().data());
             bookmarksFile.flush();
@@ -84,7 +84,7 @@ class BookmarkProvider
 
         BookmarkProvider() : bookmarksJSON_()
         {
-            QFile bookmarksFile(QApplication::applicationDirPath() + "\\bookmarks.json");
+            QFile bookmarksFile(QApplication::applicationDirPath() + "/bookmarks.json");
             if (bookmarksFile.exists()) {
                 bookmarksFile.open(QIODevice::ReadOnly);
                 bookmarksJSON_ = CU::JSONObject(bookmarksFile.readAll().toStdString());
@@ -151,7 +151,7 @@ class HistoryProvider
         static void SaveToDisk()
         {
             const auto &historyJSON = GetInstance_()->historyJSON_;
-            QFile historyFile(QApplication::applicationDirPath() + "\\history.json");
+            QFile historyFile(QApplication::applicationDirPath() + "/history.json");
             historyFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
             historyFile.write(historyJSON.toString().data());
             historyFile.flush();
@@ -182,7 +182,7 @@ class HistoryProvider
 
         HistoryProvider() : historyJSON_()
         {
-            QFile historyFile(QApplication::applicationDirPath() + "\\history.json");
+            QFile historyFile(QApplication::applicationDirPath() + "/history.json");
             if (historyFile.exists()) {
                 historyFile.open(QIODevice::ReadOnly);
                 historyJSON_ = CU::JSONObject(historyFile.readAll().toStdString());
